@@ -105,26 +105,11 @@
 
 (function () {
     'use strict';
-    //@todo Move this service to the common folder
-    angular.module('selfService')
-        .service('BeneficiariesService', ['$q', '$http', '$rootScope', '$resource', 'BASE_URL', BeneficiariesService]);
-
-    function BeneficiariesService($q, $http, $rootScope, $resource, BASE_URL) {
-
-        this.getBeneficiaries = function () {
-            return $resource(BASE_URL + '/self/beneficiaries/tpt');
-        };
-    }
-
-})();
-
-(function () {
-    'use strict';
 
     angular.module('selfService')
-        .controller('BeneficiariesListCtrl', ['$scope', '$rootScope', '$stateParams', 'BeneficiariesService', BeneficiariesListCtrl]);
+        .controller('BeneficiariesListCtrl', ['$scope', '$rootScope', '$state', '$stateParams', 'BeneficiariesService', BeneficiariesListCtrl]);
 
-    function BeneficiariesListCtrl($scope, $rootScope, $stateParams, BeneficiariesService) {
+    function BeneficiariesListCtrl($scope, $rootScope, $state, $stateParams, BeneficiariesService) {
 
         var vm = this;
         vm.loadingBeneficiaries = true;
@@ -137,11 +122,72 @@
         }
 
         vm.getBeneficiaries = getBeneficiaries();
+        vm.addBeneficiary = addBeneficiary;
 
         function getBeneficiaries() {
             BeneficiariesService.getBeneficiaries().query().$promise.then(function(data) {
                 vm.beneficiaries = data;
                 vm.loadingBeneficiaries = false;
+            });
+        }
+
+        function addBeneficiary() {
+            $state.go('app.addbeneficiary');
+        }
+    }
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('BeneficiariesAddCtrl', ['$scope', '$rootScope', '$state', '$stateParams', '$mdToast', 'BeneficiariesService', BeneficiariesAddCtrl]);
+
+    function BeneficiariesAddCtrl($scope, $rootScope, $state, $stateParams, $mdToast, BeneficiariesService) {
+
+        var vm = this;
+        vm.addBeneficiaryFormData = {
+            "locale": "en_GB"
+        };
+        vm.accountTypeOptions = [];
+        vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
+        vm.clearForm = clearForm;
+        vm.submit = submit;
+
+        function getBeneficiaryTemplate() {
+            BeneficiariesService.addBeneficiariesTemplate().get().$promise.then(function (data) {
+                vm.accountTypeOptions = data.accountTypeOptions;
+            })
+        }
+
+        function clearForm() {
+            $scope.addBeneficiaryForm.$setPristine();
+            vm.addBeneficiaryFormData = {
+                "locale": "en_GB"
+            };
+        }
+
+        function submit() {
+            BeneficiariesService.beneficiary().save(vm.addBeneficiaryFormData).$promise.then(function () {
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Beneficiary Added Successfully')
+                        .position('top right')
+                );
+                vm.clearForm();
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Adding Beneficiary: ' + errors)
+                        .position('top right')
+                );
+
             });
         }
     }
@@ -670,6 +716,28 @@
         }
 
     }
+})();
+(function() {
+    'use strict';
+
+    angular.module('selfService')
+        .service('BeneficiariesService', ['$q', '$http', '$rootScope', '$state', '$resource', 'BASE_URL', BeneficiariesService]);
+
+    function BeneficiariesService($q, $http, $rootScope, $state, $resource, BASE_URL) {
+
+        this.getBeneficiaries = function () {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt');
+        };
+
+        this.addBeneficiariesTemplate = function() {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt/template');
+        }
+
+        this.beneficiary = function () {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt');
+        }
+    }
+
 })();
 (function(){
   'use strict';
