@@ -62,6 +62,134 @@
         }
     }
 })();
+(function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('ReviewTransferDialogCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTransferDialogCtrl]);
+
+    function ReviewTransferDialogCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
+
+        var vm = this;
+        vm.transferFormData = Object.assign({}, transferFormData);
+        vm.cancel = cancel;
+        vm.transfer = transfer;
+
+        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
+
+        function cancel() {
+            $mdDialog.cancel();
+        }
+
+        function transfer() {
+            // Transforming Request Data
+            var transferData = {
+                fromOfficeId: vm.transferFormData.fromAccount.officeId,
+                fromClientId: vm.transferFormData.fromAccount.clientId,
+                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
+                fromAccountId: vm.transferFormData.fromAccount.accountId,
+                toOfficeId: vm.transferFormData.toAccount.officeId,
+                toClientId: vm.transferFormData.toAccount.clientId,
+                toAccountType: vm.transferFormData.toAccount.accountType.id,
+                toAccountId: vm.transferFormData.toAccount.accountId,
+                dateFormat: "dd MMMM yyyy",
+                locale: "en",
+                transferDate: vm.transferFormData.transferDate,
+                transferAmount: "" + vm.transferFormData.amount,
+                transferDescription: vm.transferFormData.remark
+            }
+            // Sending
+            AccountTransferService.transfer().save(transferData).$promise.then(function () {
+               $mdDialog.hide("success");
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Completed Successfully')
+                        .position('top right')
+                );
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Completing Transfer: ' + errors)
+                        .position('top right')
+                );
+                $mdDialog.hide("error");
+
+            });
+
+        }
+    }
+})();
+(function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('ReviewTPTDialogCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTPTDialogCtrl]);
+
+    function ReviewTPTDialogCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
+
+        var vm = this;
+        vm.transferFormData = Object.assign({}, transferFormData);
+        vm.cancel = cancel;
+        vm.transfer = transfer;
+
+        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
+
+        function cancel() {
+            $mdDialog.cancel();
+        }
+
+        function transfer() {
+            // Transforming Request Data
+            var transferData = {
+                fromOfficeId: vm.transferFormData.fromAccount.officeId,
+                fromClientId: vm.transferFormData.fromAccount.clientId,
+                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
+                fromAccountId: vm.transferFormData.fromAccount.accountId,
+                toOfficeId: vm.transferFormData.toAccount.officeId,
+                toClientId: vm.transferFormData.toAccount.clientId,
+                toAccountType: vm.transferFormData.toAccount.accountType.id,
+                toAccountId: vm.transferFormData.toAccount.accountId,
+                dateFormat: "dd MMMM yyyy",
+                locale: "en",
+                transferDate: vm.transferFormData.transferDate,
+                transferAmount: "" + vm.transferFormData.amount,
+                transferDescription: vm.transferFormData.remark
+            }
+            // Sending
+            AccountTransferService.transfer().save({type: "tpt"},transferData).$promise.then(function () {
+               $mdDialog.hide("success");
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Completed Successfully')
+                        .position('top right')
+                );
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Completing Transfer: ' + errors)
+                        .position('top right')
+                );
+                $mdDialog.hide("error");
+
+            });
+
+        }
+    }
+})();
 (function () {
     'use strict';
 
@@ -103,62 +231,6 @@
 
 })();
 
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .controller('BeneficiariesAddCtrl', ['$scope', '$rootScope', '$state', '$stateParams', '$mdToast', 'BeneficiariesService', BeneficiariesAddCtrl]);
-
-    function BeneficiariesAddCtrl($scope, $rootScope, $state, $stateParams, $mdToast, BeneficiariesService) {
-
-        var vm = this;
-        vm.addBeneficiaryFormData = {
-            "locale": "en_GB"
-        };
-        vm.accountTypeOptions = [];
-        vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
-        vm.clearForm = clearForm;
-        vm.submit = submit;
-
-        function getBeneficiaryTemplate() {
-            BeneficiariesService.addBeneficiariesTemplate().get().$promise.then(function (data) {
-                vm.accountTypeOptions = data.accountTypeOptions;
-            })
-        }
-
-        function clearForm() {
-            $scope.addBeneficiaryForm.$setPristine();
-            vm.addBeneficiaryFormData = {
-                "locale": "en_GB"
-            };
-        }
-
-        function submit() {
-            BeneficiariesService.beneficiary().save(vm.addBeneficiaryFormData).$promise.then(function () {
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Beneficiary Added Successfully')
-                        .position('top right')
-                );
-                vm.clearForm();
-            }, function (resp) {
-                var errors = '';
-                if(resp.data){
-                    errors = resp.data.errors.map(function (data) {
-                        return data.defaultUserMessage;
-                    });
-                    errors.join(' ');
-                }
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Error in Adding Beneficiary: ' + errors)
-                        .position('top right')
-                );
-
-            });
-        }
-    }
-})();
 (function () {
     'use strict';
 
@@ -226,6 +298,62 @@
 })();
 (function () {
     'use strict';
+
+    angular.module('selfService')
+        .controller('BeneficiariesAddCtrl', ['$scope', '$rootScope', '$state', '$stateParams', '$mdToast', 'BeneficiariesService', BeneficiariesAddCtrl]);
+
+    function BeneficiariesAddCtrl($scope, $rootScope, $state, $stateParams, $mdToast, BeneficiariesService) {
+
+        var vm = this;
+        vm.addBeneficiaryFormData = {
+            "locale": "en_GB"
+        };
+        vm.accountTypeOptions = [];
+        vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
+        vm.clearForm = clearForm;
+        vm.submit = submit;
+
+        function getBeneficiaryTemplate() {
+            BeneficiariesService.addBeneficiariesTemplate().get().$promise.then(function (data) {
+                vm.accountTypeOptions = data.accountTypeOptions;
+            })
+        }
+
+        function clearForm() {
+            $scope.addBeneficiaryForm.$setPristine();
+            vm.addBeneficiaryFormData = {
+                "locale": "en_GB"
+            };
+        }
+
+        function submit() {
+            BeneficiariesService.beneficiary().save(vm.addBeneficiaryFormData).$promise.then(function () {
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Beneficiary Added Successfully')
+                        .position('top right')
+                );
+                vm.clearForm();
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Adding Beneficiary: ' + errors)
+                        .position('top right')
+                );
+
+            });
+        }
+    }
+})();
+(function () {
+    'use strict';
     angular.module('selfService')
         .service('AccountTransferService', ['$q', '$http', '$rootScope', '$resource', 'BASE_URL', AccountTransferService]);
 
@@ -272,6 +400,155 @@
 
         function getTransferTemplate() {
             AccountTransferService.getTransferTemplate().get(function (data) {
+                vm.fromAccountOptions = data.fromAccountOptions;
+                vm.toAccountOptions = data.toAccountOptions;
+            });
+        }
+
+        function clearForm() {
+            $scope.transferForm.$setPristine();
+            vm.transferFormData = getTransferFormDataObj();
+        }
+
+        function submit(ev) {
+            $mdDialog.show({
+                controller: 'ReviewTransferDialogCtrl',
+                controllerAs: 'vm',
+                templateUrl: 'src/transfers/review-transfer-dialog/review-transfer-dialog.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                locals: {transferFormData: vm.transferFormData},
+                clickOutsideToClose: true
+            }).then(function (result) {
+                if(result === "success"){
+                    clearForm();
+                }
+            }, function () {
+                clearForm();
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Cancelled')
+                        .position('top right')
+                );
+            });
+        }
+
+
+    }
+})();
+(function () {
+    'use strict';
+    angular.module('selfService')
+        .service('AccountTransferService', ['$q', '$http', '$rootScope', '$resource', 'BASE_URL', AccountTransferService]);
+
+    function AccountTransferService($q, $http, $rootScope, $resource, BASE_URL) {
+
+        this.getTransferTemplate = function () {
+            return $resource(BASE_URL + '/self/accounttransfers/template');
+        }
+
+        this.transfer = function () {
+            return $resource(BASE_URL + '/self/accounttransfers');
+        }
+
+    }
+
+})();
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('AccountTransferCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountService', 'AccountTransferService', AccountTransferCtrl]);
+
+    function AccountTransferCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountService, AccountTransferService) {
+
+        var vm = this;
+        vm.fromAccountOptions = [];
+        vm.toAccountOptions = [];
+        vm.transferFormData = getTransferFormDataObj()
+
+        vm.getTransferTemplate = getTransferTemplate();
+        vm.submit = submit;
+
+        // FORMAT THE DATE FOR THE DATEPICKER
+        $mdDateLocale.formatDate = function (date) {
+            return $filter('date')(date, "dd-MM-yyyy");
+        };
+
+        function getTransferFormDataObj() {
+            return {
+                transferDate: new Date()
+            };
+        }
+
+        function getTransferTemplate() {
+            AccountTransferService.getTransferTemplate().get(function (data) {
+                vm.fromAccountOptions = data.fromAccountOptions;
+                vm.toAccountOptions = data.toAccountOptions;
+            });
+        }
+
+        function clearForm() {
+            $scope.transferForm.$setPristine();
+            vm.transferFormData = getTransferFormDataObj();
+        }
+
+        function submit(ev) {
+            $mdDialog.show({
+                controller: 'ReviewTransferDialogCtrl',
+                controllerAs: 'vm',
+                templateUrl: 'src/transfers/review-transfer-dialog/review-transfer-dialog.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                locals: {transferFormData: vm.transferFormData},
+                clickOutsideToClose: true
+            }).then(function (result) {
+                if(result === "success"){
+                    clearForm();
+                }
+            }, function () {
+                clearForm();
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Cancelled')
+                        .position('top right')
+                );
+            });
+        }
+
+
+    }
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('TPTCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
+
+    function TPTCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
+
+        var vm = this;
+        vm.fromAccountOptions = [];
+        vm.toAccountOptions = [];
+        vm.transferFormData = getTransferFormDataObj()
+
+        vm.getTransferTemplate = getTransferTemplate();
+        vm.submit = submit;
+
+        // FORMAT THE DATE FOR THE DATEPICKER
+        $mdDateLocale.formatDate = function (date) {
+            return $filter('date')(date, "dd-MM-yyyy");
+        };
+
+        function getTransferFormDataObj() {
+            return {
+                transferDate: new Date()
+            };
+        }
+
+        function getTransferTemplate() {
+            AccountTransferService.getTransferTemplate().get({type: "tpt"},function (data) {
                 vm.fromAccountOptions = data.fromAccountOptions;
                 vm.toAccountOptions = data.toAccountOptions;
             });
