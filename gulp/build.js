@@ -98,6 +98,7 @@ gulp.task('clean', function (done) {
 gulp.task('build', function (callback) {
     runSequence('clean',
         'js', 'inject:build',
-        'images', 'fonts', 'misc',
+        'images', 'fonts', 'misc', '' +
+        'generate-service-worker',
         callback);
 });
