@@ -37,7 +37,7 @@
                 })
                 .state('app.accounts', {
                     url: '/accounts',
-                    templateUrl: 'src/account-list/account-list.html',
+                    templateUrl: 'src/accounts/account-list/account-list.html',
                     controller: 'AccountCtrl',
                     controllerAs: 'vm',
                     data: {
@@ -46,12 +46,22 @@
                     }
                 })
                 .state('app.viewloanaccount', {
-                    url: '/viewloanaccount/:loanId',
-                    templateUrl: 'src/loan-account-detail/loan-account-detail.html',
+                    url: '/viewloanaccount/:id',
+                    templateUrl: 'src/accounts/loan-account-detail/loan-account-detail.html',
                     controller: 'LoanAccountViewCtrl',
                     controllerAs: 'vm',
                     data: {
                         title: 'View Loan Account',
+                        authorizedRoles: [USER_ROLES.user]
+                    }
+                })
+                .state('app.viewsavingsaccount', {
+                    url: '/viewsavingsaccount/:id',
+                    templateUrl: 'src/accounts/savings-account-detail/savings-account-detail.html',
+                    controller: 'SavingsAccountViewCtrl',
+                    controllerAs: 'vm',
+                    data: {
+                        title: 'View Savings Account',
                         authorizedRoles: [USER_ROLES.user]
                     }
                 })
@@ -142,6 +152,21 @@
                     controllerAs: 'vm',
                     data: {
                         title: 'Add Beneficiary',
+                        authorizedRoles: [USER_ROLES.user]
+                    }
+
+                })
+                .state('app.editbeneficiary', {
+                    url: '/beneficiaries/edit/:id',
+                    templateUrl: 'src/beneficiaries/beneficiaries-edit/beneficiaries-edit.html',
+                    controller: 'BeneficiariesEditCtrl',
+                    controllerAs: 'vm',
+                    params: {
+                        id: '',
+                        data: null
+                    },
+                    data: {
+                        title: 'Edit Beneficiary',
                         authorizedRoles: [USER_ROLES.user]
                     }
 
