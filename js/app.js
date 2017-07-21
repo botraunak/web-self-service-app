@@ -1,3 +1,44 @@
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .directive('translateHelper', translateHelper);
+
+    function translateHelper() {
+        var directive = {
+            restrict: 'E',
+            controller: 'translateHelperCtrl',
+            controllerAs: 'vm',
+            templateUrl: 'src/common/translate-helper/translate-helper.html'
+        }
+
+        return directive;
+    }
+
+})();
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('translateHelperCtrl', ['$scope', '$rootScope', '$translate', translateHelperCtrl]);
+
+    function translateHelperCtrl($scope, $rootScope, $translate) {
+        var vm = this;
+        vm.langCode = getLangCode();
+        vm.updateLang = updateLang;
+
+        function getLangCode() {
+            return $translate.use();
+        }
+
+        function updateLang() {
+            $translate.use(vm.langCode);
+        }
+    }
+
+})();
+
 (function(){
     'use strict';
 
@@ -190,47 +231,243 @@
         }
     }
 })();
+(function(){
+  'use strict';
+
+  angular.module('selfService')
+    .service('storageService', ['$q', storageService]);
+
+  function storageService($q){
+
+    return {
+        getItem: function (key) {
+            return $q.when(window.localStorage.getItem(key));
+        },
+        setItem: function (key, value) {
+            window.localStorage.setItem(key, value);
+        },
+        getObject: function (key) {
+            return $q.when(JSON.parse(window.localStorage.getItem(key)));
+        },
+        setObject: function (key, value) {
+            value = JSON.stringify(value);
+            window.localStorage.setItem(key, value);
+        },
+        clear: function () {
+            window.localStorage.clear();
+        }
+    };
+  }
+
+})();
+(function(){
+  'use strict';
+
+  angular.module('selfService')
+    .service('navService', ['$q', navService]);
+
+  function navService($q){
+    var menuItems = [
+      {
+        name: 'Dashboard',
+        icon: 'view_module',
+        sref: '.dashboard'
+      },
+      {
+        name: 'Accounts',
+        icon: 'account_balance_wallet',
+        sref: '.clients'
+      }
+    ];
+
+    return {
+      loadAllItems : function() {
+        return $q.when(menuItems);
+      }
+    };
+  }
+
+})();
 (function () {
     'use strict';
-
+    //@todo Move this service to the common folder
     angular.module('selfService')
-        .directive('translateHelper', translateHelper);
+        .service('AccountService', ['$http', '$resource', 'BASE_URL', 'storageService', AccountService]);
 
-    function translateHelper() {
-        var directive = {
-            restrict: 'E',
-            controller: 'translateHelperCtrl',
-            controllerAs: 'vm',
-            templateUrl: 'src/common/translate-helper/translate-helper.html'
+    function AccountService($http, $resource, BASE_URL, storageService) {
+
+        /**
+         * Get the clients associated with the current user's account.
+         *
+         */
+        this.getClients = function () {
+            return $resource(BASE_URL + '/self/clients/');
+        };
+
+        this.getAllAccounts = function (clientId) {//@todo rename this getClientAccounts
+            //@todo update this to return $resource(BASE_URL+'/self/clients/'+id+'/accounts'); and test
+            return $resource(BASE_URL + '/self/clients/' + clientId + '/accounts');
+        };
+
+        this.getClient = function (id) {
+            return $resource(BASE_URL + '/self/clients/' + id);
         }
 
-        return directive;
+        this.getClientImage = function (id) {
+            return $http({
+                method: 'GET',
+                url: BASE_URL + '/self/clients/' + id + '/images'
+            });
+        }
+
+        this.getClientCharges = function (id) {
+            return $resource(BASE_URL + '/self/clients/' + id + '/charges?pendingPayment=true');
+        }
+
+        this.getClientAccounts = function (id) {
+            return $resource(BASE_URL + '/self/clients/' + id + '/accounts');
+        }
+
+        this.getLoanAccount = function (id) {
+            return $resource(BASE_URL + '/self/loans/' + id);
+        }
+
+        this.setClientId = function (id) {
+            storageService.setObject('client_id', id);
+        }
+
+        this.getClientId = function () {
+            return storageService.getItem('client_id');
+        }
+
     }
 
 })();
 
 (function () {
-    'use strict';
 
     angular.module('selfService')
-        .controller('translateHelperCtrl', ['$scope', '$rootScope', '$translate', translateHelperCtrl]);
+        .controller('MainCtrl', ['navService', '$mdSidenav', 'AuthService', 'AccountService', MainCtrl]);
 
-    function translateHelperCtrl($scope, $rootScope, $translate) {
+    function MainCtrl(navService, $mdSidenav, AuthService, AccountService) {
         var vm = this;
-        vm.langCode = getLangCode();
-        vm.updateLang = updateLang;
 
-        function getLangCode() {
-            return $translate.use();
+        vm.menuItems = [];
+        vm.profileImage = null;
+        vm.selectItem = selectItem;
+        vm.toggleItemsList = toggleItemsList;
+        vm.toggleRightSidebar = toggleRightSidebar;
+        vm.logout = logout;
+
+        vm.profile = getUserData();
+
+        navService.loadAllItems().then(function (menuItems) {
+            vm.menuItems = [].concat(menuItems);
+        });
+
+        function toggleRightSidebar() {
+            $mdSidenav('right').toggle();
         }
 
-        function updateLang() {
-            $translate.use(vm.langCode);
+        function toggleItemsList() {
+            $mdSidenav('left').toggle();
         }
+
+        function selectItem(itemName) {
+            vm.title = itemName;
+            vm.toggleItemsList();
+        }
+
+        function getUserData() {
+            AccountService.getClientId().then(function (clientId) {
+                vm.clientId = clientId;
+                getClient(clientId);
+                getClientImage(clientId);
+            });
+        }
+
+        function getClient(clientId) {
+            AccountService.getClient(clientId).get().$promise.then( function (data) {
+                vm.profile = data;
+            })
+        }
+
+        function getClientImage(clientId) {
+            AccountService.getClientImage(clientId).then( function (resp) {
+                vm.profileImage = resp.data;
+            })
+        }
+
+        function logout() {
+            AuthService.logout();
+        }
+
     }
 
 })();
 
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .filter('StatusLookup', function () {
+            return function (input) {
+                var cssClassNameLookup = {
+                    "true": "statusactive",
+                    "false": "statusdeleted",
+                    "Active": "statusactive",
+                    "loanStatusType.submitted.and.pending.approval": "statuspending",
+                    "loanStatusType.approved": "statusApproved",
+                    "loanStatusType.active": "statusactive",
+                    "loanStatusType.overpaid": "statusoverpaid",
+                    "savingsAccountStatusType.submitted.and.pending.approval": "statuspending",
+                    "savingsAccountStatusType.approved": "statusApproved",
+                    "savingsAccountStatusType.active": "statusactive",
+                    "savingsAccountStatusType.activeInactive": "statusactiveoverdue",
+                    "savingsAccountStatusType.activeDormant": "statusactiveoverdue",
+                    "savingsAccountStatusType.matured": "statusmatured",
+                    "loanProduct.active": "statusactive",
+                    "clientStatusType.pending": "statuspending",
+                    "clientStatusType.closed":"statusclosed",
+                    "clientStatusType.rejected":"statusrejected",
+                    "clientStatusType.withdraw":"statuswithdraw",
+                    "clientStatusType.active": "statusactive",
+                    "clientStatusType.submitted.and.pending.approval": "statuspending",
+                    "clientStatusTYpe.approved": "statusApproved",
+                    "clientStatusType.transfer.in.progress": "statustransferprogress",
+                    "clientStatusType.transfer.on.hold": "statustransferonhold",
+                    "groupingStatusType.active": "statusactive",
+                    "groupingStatusType.pending": "statuspending",
+                    "groupingStatusType.submitted.and.pending.approval": "statuspending",
+                    "groupingStatusType.approved": "statusApproved",
+                    "shareAccountStatusType.submitted.and.pending.approval": "statuspending",
+                    "shareAccountStatusType.approved": "statusApproved",
+                    "shareAccountStatusType.active": "statusactive",
+                    "shareAccountStatusType.rejected": "statusrejected",
+                    "purchasedSharesStatusType.applied": "statuspending",
+                    "purchasedSharesStatusType.approved": "statusApproved",
+                    "purchasedSharesStatusType.rejected": "statusrejected"
+                }
+                return cssClassNameLookup[input];
+            }
+        })
+})();		
+
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .filter('DateFormat', function (dateFilter) {
+            return function (input) {
+                if (input) {
+                    var tDate = new Date(input);
+                    return dateFilter(tDate, 'dd MMMM yyyy');//@todo Add this format to localstorage
+                }
+                return '';
+            };
+        })
+})();
 (function () {
     'use strict';
 
@@ -879,245 +1116,48 @@
     }
 })();
 (function(){
-  'use strict';
-
-  angular.module('selfService')
-    .service('storageService', ['$q', storageService]);
-
-  function storageService($q){
-
-    return {
-        getItem: function (key) {
-            return $q.when(window.localStorage.getItem(key));
-        },
-        setItem: function (key, value) {
-            window.localStorage.setItem(key, value);
-        },
-        getObject: function (key) {
-            return $q.when(JSON.parse(window.localStorage.getItem(key)));
-        },
-        setObject: function (key, value) {
-            value = JSON.stringify(value);
-            window.localStorage.setItem(key, value);
-        },
-        clear: function () {
-            window.localStorage.clear();
-        }
-    };
-  }
-
-})();
-(function(){
-  'use strict';
-
-  angular.module('selfService')
-    .service('navService', ['$q', navService]);
-
-  function navService($q){
-    var menuItems = [
-      {
-        name: 'Dashboard',
-        icon: 'view_module',
-        sref: '.dashboard'
-      },
-      {
-        name: 'Accounts',
-        icon: 'account_balance_wallet',
-        sref: '.clients'
-      }
-    ];
-
-    return {
-      loadAllItems : function() {
-        return $q.when(menuItems);
-      }
-    };
-  }
-
-})();
-(function () {
     'use strict';
 
     angular.module('selfService')
-        .filter('DateFormat', function (dateFilter) {
-            return function (input) {
-                if (input) {
-                    var tDate = new Date(input);
-                    return dateFilter(tDate, 'dd MMMM yyyy');//@todo Add this format to localstorage
-                }
-                return '';
-            };
-        })
-        .filter('StatusLookup', function () {
-            return function (input) {
-                var cssClassNameLookup = {
-                    "true": "statusactive",
-                    "false": "statusdeleted",
-                    "Active": "statusactive",
-                    "loanStatusType.submitted.and.pending.approval": "statuspending",
-                    "loanStatusType.approved": "statusApproved",
-                    "loanStatusType.active": "statusactive",
-                    "loanStatusType.overpaid": "statusoverpaid",
-                    "savingsAccountStatusType.submitted.and.pending.approval": "statuspending",
-                    "savingsAccountStatusType.approved": "statusApproved",
-                    "savingsAccountStatusType.active": "statusactive",
-                    "savingsAccountStatusType.activeInactive": "statusactiveoverdue",
-                    "savingsAccountStatusType.activeDormant": "statusactiveoverdue",
-                    "savingsAccountStatusType.matured": "statusmatured",
-                    "loanProduct.active": "statusactive",
-                    "clientStatusType.pending": "statuspending",
-                    "clientStatusType.closed":"statusclosed",
-                    "clientStatusType.rejected":"statusrejected",
-                    "clientStatusType.withdraw":"statuswithdraw",
-                    "clientStatusType.active": "statusactive",
-                    "clientStatusType.submitted.and.pending.approval": "statuspending",
-                    "clientStatusTYpe.approved": "statusApproved",
-                    "clientStatusType.transfer.in.progress": "statustransferprogress",
-                    "clientStatusType.transfer.on.hold": "statustransferonhold",
-                    "groupingStatusType.active": "statusactive",
-                    "groupingStatusType.pending": "statuspending",
-                    "groupingStatusType.submitted.and.pending.approval": "statuspending",
-                    "groupingStatusType.approved": "statusApproved",
-                    "shareAccountStatusType.submitted.and.pending.approval": "statuspending",
-                    "shareAccountStatusType.approved": "statusApproved",
-                    "shareAccountStatusType.active": "statusactive",
-                    "shareAccountStatusType.rejected": "statusrejected",
-                    "purchasedSharesStatusType.applied": "statuspending",
-                    "purchasedSharesStatusType.approved": "statusApproved",
-                    "purchasedSharesStatusType.rejected": "statusrejected"
-                }
+        .controller('DashboardCtrl', ['AccountService', DashboardCtrl]);
 
-                return cssClassNameLookup[input];
-            }
-        })
-
-})();		
-
-
-(function () {
-
-    angular.module('selfService')
-        .controller('MainCtrl', ['navService', '$mdSidenav', '$mdBottomSheet', '$log', '$q', '$state', '$mdToast', '$scope', 'AuthService', 'AccountService', MainCtrl]);
-
-    function MainCtrl(navService, $mdSidenav, $mdBottomSheet, $log, $q, $state, $mdToast, $scope, AuthService, AccountService) {
+    function DashboardCtrl(AccountService) {
         var vm = this;
+        vm.dashboardData = {};
 
-        vm.menuItems = [];
-        vm.profileImage = null;
+        vm.getDashboardData = getDashboardData();
 
-        vm.selectItem = selectItem;
-        vm.toggleItemsList = toggleItemsList;
-        vm.toggleRightSidebar = toggleRightSidebar;
-        vm.logout = logout;
-
-        vm.profile = getUserData();
-
-
-        navService.loadAllItems().then(function (menuItems) {
-            vm.menuItems = [].concat(menuItems);
-        });
-
-        function toggleRightSidebar() {
-            $mdSidenav('right').toggle();
-        }
-
-        function toggleItemsList() {
-            var pending = $mdBottomSheet.hide() || $q.when(true);
-
-            pending.then(function () {
-                $mdSidenav('left').toggle();
-            });
-        }
-
-        function selectItem(itemName) {
-            vm.title = itemName;
-            vm.toggleItemsList();
-        }
-
-        function getUserData() {
+        function getDashboardData() {
             AccountService.getClientId().then(function (clientId) {
-                vm.clientId = clientId;
-                getClient(clientId);
-                getClientImage(clientId);
-            });
-        }
-
-        function getClient(clientId) {
-            AccountService.getClient(clientId).get().$promise.then( function (data) {
-                vm.profile = data;
+                AccountService.getAllAccounts(clientId).get().$promise.then(function(data) {
+                    vm.dashboardData.loanAccounts = data.loanAccounts;
+                    vm.dashboardData.savingsAccounts = data.savingsAccounts;
+                    vm.dashboardData.shareAccounts = data.shareAccounts;
+                    vm.dashboardData.totalAccounts = vm.dashboardData.loanAccounts.length + vm.dashboardData.savingsAccounts.length + vm.dashboardData.shareAccounts.length
+                    vm.dashboardData.totalSavings = data.savingsAccounts.reduce(getTotalSavings, 0);
+                    vm.dashboardData.totalLoan = data.loanAccounts.reduce(getTotalLoan, 0)
+                });
             })
         }
 
-        function getClientImage(clientId) {
-            AccountService.getClientImage(clientId).then( function (resp) {
-                vm.profileImage = resp.data;
-            })
+        function getTotalSavings(total, acc) {
+            if(acc.accountBalance) {
+                return total + acc.accountBalance;
+            } else {
+                return total;
+            }
         }
 
-        function logout() {
-            AuthService.logout();
-        }
-
-    }
-
-})();
-
-(function () {
-    'use strict';
-    //@todo Move this service to the common folder
-    angular.module('selfService')
-        .service('AccountService', ['$http', '$resource', 'BASE_URL', 'storageService', AccountService]);
-
-    function AccountService($http, $resource, BASE_URL, storageService) {
-
-        /**
-         * Get the clients associated with the current user's account.
-         *
-         */
-        this.getClients = function () {
-            return $resource(BASE_URL + '/self/clients/');
-        };
-
-        this.getAllAccounts = function (clientId) {//@todo rename this getClientAccounts
-            //@todo update this to return $resource(BASE_URL+'/self/clients/'+id+'/accounts'); and test
-            return $resource(BASE_URL + '/self/clients/' + clientId + '/accounts');
-        };
-
-        this.getClient = function (id) {
-            return $resource(BASE_URL + '/self/clients/' + id);
-        }
-
-        this.getClientImage = function (id) {
-            return $http({
-                method: 'GET',
-                url: BASE_URL + '/self/clients/' + id + '/images'
-            });
-        }
-
-        this.getClientCharges = function (id) {
-            return $resource(BASE_URL + '/self/clients/' + id + '/charges?pendingPayment=true');
-        }
-
-        this.getClientAccounts = function (id) {
-            return $resource(BASE_URL + '/self/clients/' + id + '/accounts');
-        }
-
-        this.getLoanAccount = function (id) {
-            return $resource(BASE_URL + '/self/loans/' + id);
-        }
-
-        this.setClientId = function (id) {
-            storageService.setObject('client_id', id);
-        }
-
-        this.getClientId = function () {
-            return storageService.getItem('client_id');
+        function getTotalLoan(total, acc) {
+            if(acc.loanBalance) {
+                return total + acc.loanBalance;
+            } else {
+                return total;
+            }
         }
 
     }
-
 })();
-
 (function () {
     'use strict';
     angular.module('selfService')
