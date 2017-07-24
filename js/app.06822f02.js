@@ -472,75 +472,6 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('BeneficiariesEditCtrl', ['$scope', '$stateParams', '$mdToast', 'BeneficiariesService', BeneficiariesEditCtrl]);
-
-    function BeneficiariesEditCtrl($scope, $stateParams, $mdToast, BeneficiariesService) {
-
-        var vm = this;
-        vm.editBeneficiaryFormData = {
-            "locale": "en_GB"
-        };
-        vm.beneficiary = $stateParams.data;
-        vm.accountTypeOptions = [];
-        vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
-        vm.clearForm = clearForm;
-        vm.submit = submit;
-
-        function getBeneficiaryTemplate() {
-            BeneficiariesService.template().get().$promise.then(function (data) {
-                vm.accountTypeOptions = data.accountTypeOptions;
-            });
-
-            if(vm.beneficiary !== null) {
-                vm.editBeneficiaryFormData.accountType = vm.beneficiary.accountType.id;
-                vm.editBeneficiaryFormData.accountNumber = vm.beneficiary.accountNumber;
-                vm.editBeneficiaryFormData.officeName = vm.beneficiary.officeName;
-                vm.editBeneficiaryFormData.transferLimit = vm.beneficiary.transferLimit;
-                vm.editBeneficiaryFormData.name = vm.beneficiary.name;
-            }
-        }
-
-        function clearForm() {
-            $scope.editBeneficiaryForm.$setPristine();
-            vm.editBeneficiaryFormData = {
-                "locale": "en_GB"
-            };
-        }
-
-        function submit() {
-            var data = {
-                name: vm.editBeneficiaryFormData.name,
-                transferLimit: vm.editBeneficiaryFormData.transferLimit
-            }
-
-            BeneficiariesService.beneficiary().update({id: vm.beneficiary.id}, data).$promise.then(function () {
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Beneficiary Updated Successfully')
-                        .position('top right')
-                );
-            }, function (resp) {
-                var errors = '';
-                if(resp.data){
-                    errors = resp.data.errors.map(function (data) {
-                        return data.defaultUserMessage;
-                    });
-                    errors.join(' ');
-                }
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Error in Adding Beneficiary: ' + errors)
-                        .position('top right')
-                );
-
-            });
-        }
-    }
-})();
-(function () {
-    'use strict';
-
-    angular.module('selfService')
         .controller('BeneficiariesListCtrl', ['$state', '$mdDialog', '$mdToast', 'BeneficiariesService', BeneficiariesListCtrl]);
 
     function BeneficiariesListCtrl($state, $mdDialog, $mdToast, BeneficiariesService) {
@@ -606,6 +537,75 @@
                         .textContent('Error in Deleting Beneficiary')
                         .position('top right')
                 );
+            });
+        }
+    }
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('BeneficiariesEditCtrl', ['$scope', '$stateParams', '$mdToast', 'BeneficiariesService', BeneficiariesEditCtrl]);
+
+    function BeneficiariesEditCtrl($scope, $stateParams, $mdToast, BeneficiariesService) {
+
+        var vm = this;
+        vm.editBeneficiaryFormData = {
+            "locale": "en_GB"
+        };
+        vm.beneficiary = $stateParams.data;
+        vm.accountTypeOptions = [];
+        vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
+        vm.clearForm = clearForm;
+        vm.submit = submit;
+
+        function getBeneficiaryTemplate() {
+            BeneficiariesService.template().get().$promise.then(function (data) {
+                vm.accountTypeOptions = data.accountTypeOptions;
+            });
+
+            if(vm.beneficiary !== null) {
+                vm.editBeneficiaryFormData.accountType = vm.beneficiary.accountType.id;
+                vm.editBeneficiaryFormData.accountNumber = vm.beneficiary.accountNumber;
+                vm.editBeneficiaryFormData.officeName = vm.beneficiary.officeName;
+                vm.editBeneficiaryFormData.transferLimit = vm.beneficiary.transferLimit;
+                vm.editBeneficiaryFormData.name = vm.beneficiary.name;
+            }
+        }
+
+        function clearForm() {
+            $scope.editBeneficiaryForm.$setPristine();
+            vm.editBeneficiaryFormData = {
+                "locale": "en_GB"
+            };
+        }
+
+        function submit() {
+            var data = {
+                name: vm.editBeneficiaryFormData.name,
+                transferLimit: vm.editBeneficiaryFormData.transferLimit
+            }
+
+            BeneficiariesService.beneficiary().update({id: vm.beneficiary.id}, data).$promise.then(function () {
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Beneficiary Updated Successfully')
+                        .position('top right')
+                );
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Adding Beneficiary: ' + errors)
+                        .position('top right')
+                );
+
             });
         }
     }
@@ -1119,11 +1119,22 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('DashboardCtrl', ['AccountService', DashboardCtrl]);
+        .controller('DashboardCtrl', ['$filter', 'AccountService', DashboardCtrl]);
 
-    function DashboardCtrl(AccountService) {
+    function DashboardCtrl($filter, AccountService) {
         var vm = this;
         vm.dashboardData = {};
+        vm.options = {
+            chart: {
+                type: 'pieChart',
+                height: 300,
+                showLabels: false,
+                x: function(d){return d.key;},
+                y: function(d){return d.y;},
+                duration: 500,
+                labelSunbeamLayout: true,
+            }
+        };
 
         vm.getDashboardData = getDashboardData();
 
@@ -1135,7 +1146,10 @@
                     vm.dashboardData.shareAccounts = data.shareAccounts;
                     vm.dashboardData.totalAccounts = vm.dashboardData.loanAccounts.length + vm.dashboardData.savingsAccounts.length + vm.dashboardData.shareAccounts.length
                     vm.dashboardData.totalSavings = data.savingsAccounts.reduce(getTotalSavings, 0);
-                    vm.dashboardData.totalLoan = data.loanAccounts.reduce(getTotalLoan, 0)
+                    vm.dashboardData.totalLoan = data.loanAccounts.reduce(getTotalLoan, 0);
+                    vm.dashboardData.loanAccountsOverview = getChartData(data.loanAccounts);
+                    vm.dashboardData.savingsAccountsOverview = getChartData(data.savingsAccounts);
+                    vm.dashboardData.shareAccountsOverview = getChartData(data.shareAccounts);
                 });
             })
         }
@@ -1156,33 +1170,24 @@
             }
         }
 
-    }
-})();
-(function() {
-    'use strict';
-
-    angular.module('selfService')
-        .service('BeneficiariesService', ['$resource', 'BASE_URL', BeneficiariesService]);
-
-    function BeneficiariesService($resource, BASE_URL) {
-
-        this.getBeneficiaries = function () {
-            return $resource(BASE_URL + '/self/beneficiaries/tpt');
-        };
-
-        this.template = function() {
-            return $resource(BASE_URL + '/self/beneficiaries/tpt/template');
-        }
-
-        this.beneficiary = function () {
-            return $resource(BASE_URL + '/self/beneficiaries/tpt/:id',{id: '@id'},{
-                update: {
-                    method: 'PUT'
-                }
+        function getChartData(accounts) {
+            var chartObj = {};
+            accounts.map(function(acc) {
+               chartObj[acc.status.value] = (chartObj[acc.status.value]) ? chartObj[acc.status.value] + 1: 1;
             });
+            var chartData  = [];
+            var keys = Object.keys(chartObj);
+            for (var i in keys) {
+                chartData.push({
+                    key: keys[i],
+                    y: chartObj[keys[i]]
+                });
+            }
+            return chartData;
         }
-    }
 
+
+    }
 })();
 (function () {
     'use strict';
@@ -1233,6 +1238,32 @@
         }
 
     }
+})();
+(function() {
+    'use strict';
+
+    angular.module('selfService')
+        .service('BeneficiariesService', ['$resource', 'BASE_URL', BeneficiariesService]);
+
+    function BeneficiariesService($resource, BASE_URL) {
+
+        this.getBeneficiaries = function () {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt');
+        };
+
+        this.template = function() {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt/template');
+        }
+
+        this.beneficiary = function () {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt/:id',{id: '@id'},{
+                update: {
+                    method: 'PUT'
+                }
+            });
+        }
+    }
+
 })();
 (function(){
   'use strict';
@@ -1326,7 +1357,7 @@
                                     .hideDelay(2000)
                                     .position('top right')
                             );
-                            $state.go("app.accounts");
+                            $state.go("app.dashboard");
                         } else {
                             $mdToast.show(
                                 $mdToast.simple()
