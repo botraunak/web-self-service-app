@@ -43,149 +43,41 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('ReviewTransferDialogCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTransferDialogCtrl]);
-
-    function ReviewTransferDialogCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
-
-        var vm = this;
-        vm.transferFormData = Object.assign({}, transferFormData);
-        vm.cancel = cancel;
-        vm.transfer = transfer;
-
-        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
-
-        function cancel() {
-            $mdDialog.cancel();
-        }
-
-        function transfer() {
-            // Transforming Request Data
-            var transferData = {
-                fromOfficeId: vm.transferFormData.fromAccount.officeId,
-                fromClientId: vm.transferFormData.fromAccount.clientId,
-                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
-                fromAccountId: vm.transferFormData.fromAccount.accountId,
-                toOfficeId: vm.transferFormData.toAccount.officeId,
-                toClientId: vm.transferFormData.toAccount.clientId,
-                toAccountType: vm.transferFormData.toAccount.accountType.id,
-                toAccountId: vm.transferFormData.toAccount.accountId,
-                dateFormat: "dd MMMM yyyy",
-                locale: "en",
-                transferDate: vm.transferFormData.transferDate,
-                transferAmount: "" + vm.transferFormData.amount,
-                transferDescription: vm.transferFormData.remark
-            }
-            // Sending
-            AccountTransferService.transfer().save(transferData).$promise.then(function () {
-               $mdDialog.hide("success");
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Transfer Completed Successfully')
-                        .position('top right')
-                );
-            }, function (resp) {
-                var errors = '';
-                if(resp.data){
-                    errors = resp.data.errors.map(function (data) {
-                        return data.defaultUserMessage;
-                    });
-                    errors.join(' ');
-                }
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Error in Completing Transfer: ' + errors)
-                        .position('top right')
-                );
-                $mdDialog.hide("error");
-
-            });
-
-        }
-    }
-})();
-(function(){
-    'use strict';
-
-    angular.module('selfService')
-        .controller('ReviewTransferDialogCtrl', ['$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTransferDialogCtrl]);
-
-    function ReviewTransferDialogCtrl($filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
-
-        var vm = this;
-        vm.transferFormData = Object.assign({}, transferFormData);
-        vm.cancel = cancel;
-        vm.transfer = transfer;
-
-        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
-
-        function cancel() {
-            $mdDialog.cancel();
-        }
-
-        function transfer() {
-            // Transforming Request Data
-            var transferData = {
-                fromOfficeId: vm.transferFormData.fromAccount.officeId,
-                fromClientId: vm.transferFormData.fromAccount.clientId,
-                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
-                fromAccountId: vm.transferFormData.fromAccount.accountId,
-                toOfficeId: vm.transferFormData.toAccount.officeId,
-                toClientId: vm.transferFormData.toAccount.clientId,
-                toAccountType: vm.transferFormData.toAccount.accountType.id,
-                toAccountId: vm.transferFormData.toAccount.accountId,
-                dateFormat: "dd MMMM yyyy",
-                locale: "en",
-                transferDate: vm.transferFormData.transferDate,
-                transferAmount: "" + vm.transferFormData.amount,
-                transferDescription: vm.transferFormData.remark
-            }
-            // Sending
-            AccountTransferService.transfer().save(transferData).$promise.then(function () {
-               $mdDialog.hide("success");
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Transfer Completed Successfully')
-                        .position('top right')
-                );
-            }, function (resp) {
-                var errors = '';
-                if(resp.data){
-                    errors = resp.data.errors.map(function (data) {
-                        return data.defaultUserMessage;
-                    });
-                    errors.join(' ');
-                }
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Error in Completing Transfer: ' + errors)
-                        .position('top right')
-                );
-                $mdDialog.hide("error");
-
-            });
-
-        }
-    }
-})();
-(function(){
-    'use strict';
-
-    angular.module('selfService')
         .controller('ReviewTPTDialogCtrl', ['$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTPTDialogCtrl]);
 
+    /**
+     * @module ReviewTPTDialogCtrl
+     * @description
+     * Review Third party transfer confirm dialog
+     */
     function ReviewTPTDialogCtrl($filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
 
         var vm = this;
+
+        /**
+         * @name transferFormData
+         * @type {object}
+         * @description To get the form data to be sent to the server
+         */
         vm.transferFormData = Object.assign({}, transferFormData);
+
         vm.cancel = cancel;
         vm.transfer = transfer;
 
         vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
 
+        /**
+         * @method cancel
+         * @description To cancel the dialog and close it
+         */
         function cancel() {
             $mdDialog.cancel();
         }
 
+        /**
+         * @method transfer
+         * @description Do transfer send data to server
+         */
         function transfer() {
             // Transforming Request Data
             var transferData = {
@@ -232,11 +124,101 @@
     }
 })();
 (function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('ReviewTransferDialogCtrl', ['$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTransferDialogCtrl]);
+
+    /**
+     * @module ReviewTransferDialogCtrl
+     * @description
+     * Review transfer confirm dialog
+     */
+    function ReviewTransferDialogCtrl($filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
+
+        var vm = this;
+
+        /**
+         * @name transferFormData
+         * @type {object}
+         * @description stores the form data to be sent to server for doing third party transfer
+         */
+        vm.transferFormData = Object.assign({}, transferFormData);
+
+        vm.cancel = cancel;
+        vm.transfer = transfer;
+
+        // Format date for the DatePicker
+        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
+
+        /**
+         * @method cancel
+         * @description to cancel the dialog and the transfer
+         */
+        function cancel() {
+            $mdDialog.cancel();
+        }
+
+        /**
+         * @method transfer
+         * @description to send form data to the server to perform transfer
+         */
+        function transfer() {
+            // Transforming Request Data
+            var transferData = {
+                fromOfficeId: vm.transferFormData.fromAccount.officeId,
+                fromClientId: vm.transferFormData.fromAccount.clientId,
+                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
+                fromAccountId: vm.transferFormData.fromAccount.accountId,
+                toOfficeId: vm.transferFormData.toAccount.officeId,
+                toClientId: vm.transferFormData.toAccount.clientId,
+                toAccountType: vm.transferFormData.toAccount.accountType.id,
+                toAccountId: vm.transferFormData.toAccount.accountId,
+                dateFormat: "dd MMMM yyyy",
+                locale: "en",
+                transferDate: vm.transferFormData.transferDate,
+                transferAmount: "" + vm.transferFormData.amount,
+                transferDescription: vm.transferFormData.remark
+            }
+            // Sending
+            AccountTransferService.transfer().save(transferData).$promise.then(function () {
+               $mdDialog.hide("success");
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Completed Successfully')
+                        .position('top right')
+                );
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Completing Transfer: ' + errors)
+                        .position('top right')
+                );
+                $mdDialog.hide("error");
+
+            });
+
+        }
+    }
+})();
+(function(){
   'use strict';
 
   angular.module('selfService')
     .service('storageService', ['$q', storageService]);
 
+  /**
+   * @module storageService
+   * @description
+   * Service required to interact with local storage
+   */
   function storageService($q){
 
     return {
@@ -266,6 +248,10 @@
   angular.module('selfService')
     .service('navService', ['$q', navService]);
 
+    /**
+     * @module navService
+     * @description Navigation Service
+     */
   function navService($q){
     var menuItems = [
       {
@@ -290,22 +276,21 @@
 })();
 (function () {
     'use strict';
-    //@todo Move this service to the common folder
     angular.module('selfService')
         .service('AccountService', ['$http', '$resource', 'BASE_URL', 'storageService', AccountService]);
 
+    /**
+     * @module AccountService
+     * @description
+     * Service required for managing Accounts
+     */
     function AccountService($http, $resource, BASE_URL, storageService) {
 
-        /**
-         * Get the clients associated with the current user's account.
-         *
-         */
         this.getClients = function () {
             return $resource(BASE_URL + '/self/clients/');
         };
 
         this.getAllAccounts = function (clientId) {//@todo rename this getClientAccounts
-            //@todo update this to return $resource(BASE_URL+'/self/clients/'+id+'/accounts'); and test
             return $resource(BASE_URL + '/self/clients/' + clientId + '/accounts');
         };
 
@@ -474,13 +459,48 @@
     angular.module('selfService')
         .controller('BeneficiariesListCtrl', ['$state', '$mdDialog', '$mdToast', 'BeneficiariesService', BeneficiariesListCtrl]);
 
+    /**
+     * @module BeneficiariesListCtrl
+     * @description
+     * Shows list of beneficiary in the self service account
+     */
     function BeneficiariesListCtrl($state, $mdDialog, $mdToast, BeneficiariesService) {
 
         var vm = this;
+
+        /**
+         * @name loadingBeneficiaries
+         * @type {boolean}
+         * @description Flag to check if beneficiaries have been loaded
+         */
         vm.loadingBeneficiaries = true;
+
+        /**
+         * @name beneficiaries
+         * @type {Array}
+         * @description Stores Beneficiaries returned from the serve
+         */
         vm.beneficiaries = [];
+
+        /**
+         * @name beneficiariesFilter
+         * @type {string}
+         * @description To store the search input filter
+         */
         vm.beneficiariesFilter = "";
+
+        /**
+         * @name page
+         * @type {number}
+         * @description To store the current page number
+         */
         vm.page = 1;
+
+        /**
+         * @name query
+         * @description The Datatable needs a query object to query data to the server and filter
+         * @type {{limit: number, offset: number}}
+         */
         vm.query = {
             limit: 5,
             offset: 0
@@ -491,6 +511,10 @@
         vm.goToEdit = goToEdit;
         vm.deleteConfirm = deleteConfirm;
 
+        /**
+         * @method getBeneficiaries
+         * @description To get beneficiaries from the server
+         */
         function getBeneficiaries() {
             BeneficiariesService.getBeneficiaries().query().$promise.then(function(data) {
                 vm.beneficiaries = data;
@@ -498,10 +522,19 @@
             });
         }
 
+        /**
+         * @method addBeneficiary
+         * @description To take user the add beneficiary form
+         */
         function addBeneficiary() {
             $state.go('app.addbeneficiary');
         }
 
+        /**
+         * @method goToEdit
+         * @param beneficiary
+         * @description To take user to the edit beneficiary form
+         */
         function goToEdit(beneficiary) {
             $state.go('app.editbeneficiary',{
                 id: beneficiary.id,
@@ -509,6 +542,12 @@
             });
         }
 
+        /**
+         * @method deleteConfirm
+         * @param ev
+         * @param beneficiary
+         * @description Show confirm dialog before deleting user
+         */
         function deleteConfirm(ev, beneficiary) {
             var confirm = $mdDialog.confirm()
                 .title('Are you sure you want to delete?')
@@ -547,18 +586,45 @@
     angular.module('selfService')
         .controller('BeneficiariesEditCtrl', ['$scope', '$stateParams', '$mdToast', 'BeneficiariesService', BeneficiariesEditCtrl]);
 
+    /**
+     * @module BeneficiariesEditCtrl
+     * @description
+     * Handles Updation of beneficiary in the self service account
+     */
     function BeneficiariesEditCtrl($scope, $stateParams, $mdToast, BeneficiariesService) {
 
         var vm = this;
+
+        /**
+         * @name editBeneficiaryFormData
+         * @type {object}
+         * @description Stores beneficiary data to be edited and sent to server
+         */
         vm.editBeneficiaryFormData = {
             "locale": "en_GB"
         };
+
+        /**
+         * @name beneficiary
+         * @description Stores the beneficiary data
+         */
         vm.beneficiary = $stateParams.data;
+
+        /**
+         * @name accountTypeOptions
+         * @type {Array}
+         * @description Stores the type of account options available [ Savings, Loan ]
+         */
         vm.accountTypeOptions = [];
+
         vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
         vm.clearForm = clearForm;
         vm.submit = submit;
 
+        /**
+         * @method getBeneficiaryTemplate
+         * @description Gets the beneficiary template from server to be filled in by the client
+         */
         function getBeneficiaryTemplate() {
             BeneficiariesService.template().get().$promise.then(function (data) {
                 vm.accountTypeOptions = data.accountTypeOptions;
@@ -573,6 +639,10 @@
             }
         }
 
+        /**
+         * @method clearForm
+         * @description Clears Beneficiary Form
+         */
         function clearForm() {
             $scope.editBeneficiaryForm.$setPristine();
             vm.editBeneficiaryFormData = {
@@ -580,6 +650,10 @@
             };
         }
 
+        /**
+         * @method submit
+         * @description Handles submit of the edit beneficiary form
+         */
         function submit() {
             var data = {
                 name: vm.editBeneficiaryFormData.name,
@@ -616,23 +690,50 @@
     angular.module('selfService')
         .controller('BeneficiariesAddCtrl', ['$scope', '$mdToast', 'BeneficiariesService', BeneficiariesAddCtrl]);
 
+    /**
+     * @module BeneficiariesAddCtrl
+     * @description
+     * Handles Adding beneficiary to the self service account
+     */
     function BeneficiariesAddCtrl($scope, $mdToast, BeneficiariesService) {
 
         var vm = this;
+
+        /**
+         * @name addBeneficiaryFormData
+         * @type {object}
+         * @description To send beneficiary data to server to add him to client
+         */
         vm.addBeneficiaryFormData = {
             "locale": "en_GB"
         };
+
+        /**
+         * @name accountTypeOptions
+         * @type {Array}
+         * @description The type of account options of beneficiaries [savings, loan]
+         */
         vm.accountTypeOptions = [];
+
         vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
+
         vm.clearForm = clearForm;
         vm.submit = submit;
 
+        /**
+         * @method getBeneficiary Template
+         * @description To get beneficiary template to create
+         */
         function getBeneficiaryTemplate() {
             BeneficiariesService.template().get().$promise.then(function (data) {
                 vm.accountTypeOptions = data.accountTypeOptions;
             })
         }
 
+        /**
+         * @method clearForm
+         * @description Function to clear form
+         */
         function clearForm() {
             $scope.addBeneficiaryForm.$setPristine();
             vm.addBeneficiaryFormData = {
@@ -640,6 +741,10 @@
             };
         }
 
+        /**
+         * @method submit
+         * @description Method to submit beneficiary to the server
+         */
         function submit() {
             BeneficiariesService.beneficiary().save(vm.addBeneficiaryFormData).$promise.then(function () {
                 $mdToast.show(
@@ -668,6 +773,98 @@
 })();
 (function () {
     'use strict';
+
+    angular.module('selfService')
+        .controller('RegisterCtrl', ['$scope', '$state', '$mdToast', 'AuthService', 'AccountService', RegisterCtrl]);
+
+    /**
+     * @module RegisterCtrl
+     * @description
+     * Handles Registration of self service user
+     */
+    function RegisterCtrl($scope, $state, $mdToast, AuthService, AccountService) {
+
+
+    }
+
+})();
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('LoginCtrl', ['$scope', '$state', '$mdToast', 'AuthService', 'AccountService', LoginCtrl]);
+
+    /**
+     * @module LoginCtrl
+     * @description
+     * Handles Login into the webapp
+     */
+    function LoginCtrl($scope, $state, $mdToast, AuthService, AccountService) {
+
+        /**
+         * @method doLogin
+         * @description To perform the login action on the page
+         */
+        $scope.doLogin = function () {
+            AuthService.doLogin($scope.loginData).save().$promise.then(function (result) {
+                AuthService.setUser(result);
+                AccountService.getClients().get().$promise
+                    .then(function (res) {
+                        if (res.pageItems.length !== 0) {
+                            AccountService.setClientId(res.pageItems[0].id);
+                            $mdToast.show(
+                                $mdToast.simple()
+                                    .content("Successful Login")
+                                    .hideDelay(2000)
+                                    .position('top right')
+                            );
+                            $state.go("app.dashboard");
+                        } else {
+                            $mdToast.show(
+                                $mdToast.simple()
+                                    .content("No Clients Found")
+                                    .hideDelay(2000)
+                                    .position('top right')
+                            );
+                            AuthService.logout();
+                        }
+                    })
+                    .catch(function () {
+                        $mdToast.show(
+                            $mdToast.simple()
+                                .content("Not a Self Service User")
+                                .hideDelay(2000)
+                                .position('top right')
+                        );
+                        AuthService.logout();
+                    })
+            });
+        }
+
+    }
+
+})();
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('ForgotPwdCtrl', ['$scope', '$state', '$mdToast', 'AuthService', 'AccountService', ForgotPwdCtrl]);
+
+    /**
+     * @module ForgotPwdCtrl
+     * @description
+     * Handles Forgot Password
+     */
+    function ForgotPwdCtrl($scope, $state, $mdToast, AuthService, AccountService) {
+
+    }
+
+})();
+
+(function () {
+    'use strict';
     //@todo Move this service to the common folder
     angular.module('selfService')
         .service('SavingsAccountService', ['$resource', 'BASE_URL', SavingsAccountService]);
@@ -687,16 +884,44 @@
 
 		angular.module('selfService')
 			.controller('SavingsAccountViewCtrl', ['$stateParams', '$filter', 'SavingsAccountService', SavingsAccountViewCtrl]);
-
+		/**
+		 * @module SavingsAccountViewCtrl
+		 * @description
+		 * Handles the individial savings account detail page
+		 */
 		function SavingsAccountViewCtrl($stateParams, $filter, SavingsAccountService) {
 
 			var vm = this;
+
+			/**
+			 * @name loadingSavingsAccount
+             * @type {boolean}
+			 * @description Flag to check where the savings account data is loaded or not
+             */
 			vm.loadingSavingsAccount = true;
-			vm.savingsAccountDetails 		= getLoanDetails( $stateParams.id );
-			vm.statusClass = '';
+
+            /**
+			 * @name statusClass
+             * @type {string}
+			 * @description Stores the status class of savings account
+             */
+            vm.statusClass = '';
+
+            /**
+			 * @name savingsAccountDetails
+			 * @type {object}
+			 * @description Stores the savings account details from server
+             */
+			vm.savingsAccountDetails = getSavingsDetail($stateParams.id);
+
 			vm.getStatusClass = getStatusClass
 
-			function getLoanDetails( id ) {
+            /**
+			 * @method getSavingsDetail
+			 * @description Gets savings account detail from server
+			 * @param id {number} Savings Account id
+             */
+			function getSavingsDetail(id) {
                 SavingsAccountService.savingsAccount().get({id: id}).$promise.then(function(res) {
 					vm.loadingSavingsAccount = false;
 					vm.savingsAccountDetails = res;
@@ -704,6 +929,10 @@
 				});
 			}
 
+            /**
+			 * @method getStatusClass
+			 * @description updates the status of the savings account
+             */
 			function getStatusClass() {
                 var statusClass = $filter('StatusLookup')(vm.savingsAccountDetails.status.code);
                 statusClass = 'bg_' + statusClass;
@@ -731,67 +960,141 @@
 })();
 
 
-(function(){
-	'use strict';
+(function () {
+    'use strict';
 
-		angular.module('selfService')
-			.controller('LoanAccountViewCtrl', ['$stateParams', '$filter', 'LoanAccountService', LoanAccountViewCtrl]);
+    angular.module('selfService')
+        .controller('LoanAccountViewCtrl', ['$stateParams', '$filter', 'LoanAccountService', LoanAccountViewCtrl]);
 
-		function LoanAccountViewCtrl($stateParams, $filter, LoanAccountService) {
+    /**
+     * @module LoanAccountViewCtrl
+     * @description
+     * Handles the Loan Account Details Page.
+     */
+    function LoanAccountViewCtrl($stateParams, $filter, LoanAccountService) {
 
-			var vm = this;
-			vm.loadingLoanAccountInfo 	= true;
-			vm.loanAccountDetails 		= getLoanDetails( $stateParams.id );
-			vm.statusClass = '';
-			vm.getStatusClass = getStatusClass
+        var vm = this;
 
-			function getLoanDetails( id ) {
-				LoanAccountService.loanAccount().get({id: id}).$promise.then(function(res) {
-					vm.loadingLoanAccountInfo = false;
-					vm.loanAccountDetails = res;
-					getStatusClass();
-				});
-			}
+        /**
+         * @name loadingLoanAccountInfo
+         * @description flag to check whether account info is loaded or not
+         * @type {boolean}
+         */
+        vm.loadingLoanAccountInfo = true;
 
-			function getStatusClass() {
-                var statusClass = $filter('StatusLookup')(vm.loanAccountDetails.status.code);
-                statusClass = 'bg_' + statusClass;
-                if(vm.loanAccountDetails.inArrears) {
-                    statusClass += 'overdue';
-				}
+        /**
+         * @name loanAccountDetails
+         * @type {object}
+         * @description To store the loan Account details returned by server
+         */
+        vm.loanAccountDetails = getLoanDetails($stateParams.id);
 
-				vm.statusClass = statusClass;
-			}
-		}
+        /**
+         * @name statusClass
+         * @type {string}
+         * @description To store the css class for loan status [active, pending, ...]
+         */
+        vm.statusClass = '';
+
+        /**
+         * @method getLoanDetails
+         * @description To get the loan details from the server
+         * @param id {number} Loan Account id
+         */
+        function getLoanDetails(id) {
+            LoanAccountService.loanAccount().get({id: id}).$promise.then(function (res) {
+                vm.loadingLoanAccountInfo = false;
+                vm.loanAccountDetails = res;
+                getStatusClass();
+            });
+        }
+
+        /**
+         * @method getStatusClass
+         * @description To get the loan account status through the status lookup filter
+         */
+        function getStatusClass() {
+            var statusClass = $filter('StatusLookup')(vm.loanAccountDetails.status.code);
+            statusClass = 'bg_' + statusClass;
+            if (vm.loanAccountDetails.inArrears) {
+                statusClass += 'overdue';
+            }
+
+            vm.statusClass = statusClass;
+        }
+    }
 })();
 
 (function () {
     'use strict';
 
     angular.module('selfService')
-        .controller('AccountCtrl', ['$state', 'AccountService', 'AuthService', AccountCtrl]);
+        .controller('AccountCtrl', ['$state', 'AccountService', AccountCtrl]);
 
-    function AccountCtrl($state, AccountService, AuthService) {
+    /**
+     * @module AccountCtrl
+     * @description
+     * Handles all different types of account of the user
+     * Shows Loan, Savings and Share accounts of the client
+     */
+    function AccountCtrl($state, AccountService) {
 
         var vm = this;
-        vm.selected = [];
-        vm.getAccounts = getAccounts;
-        vm.onPaginate = onPaginate;
-        vm.onReorder = onReorder;
-        vm.routeTo = routeTo;
-        vm.userData = AuthService.getUser();
-        vm.clientId = getClient();//@todo check if this is behind the 2 calls
-        vm.accounts = [];
+
+        /**
+         * @name loanAccounts
+         * @description To Store the loan accounts of user
+         * @type {Array}
+         */
         vm.loanAccounts = [];
+
+        /**
+         * @name savingsAccounts
+         * @description To store Savings account of user
+         * @type {Array}
+         */
         vm.savingsAccounts = [];
+
+        /**
+         * @name shareAccounts
+         * @description To store share accounts of user
+         * @type {Array}
+         */
         vm.shareAccounts = [];
+
+        /**
+         * @name loadingAccountInfo
+         * @description flag to store whether data loaded from API or not
+         * @type {boolean}
+         */
         vm.loadingAccountInfo = true;
 
+        /**
+         * @name query
+         * @description The Datatable needs a query object to query data to the server and filter
+         * @type {{limit: number, offset: number}}
+         */
         vm.query = {
             limit: 5,
             offset: 1
         };
 
+        /**
+         * @name clientId
+         * @description Store Client Id of the user
+         * @type {number}
+         */
+        vm.clientId = getClient();
+
+        vm.getAccounts = getAccounts;
+        vm.onPaginate = onPaginate;
+        vm.onReorder = onReorder;
+        vm.routeTo = routeTo;
+
+        /**
+         * @method getClient
+         * @description Get Client from account service and then fetch accounts
+         */
         function getClient() {
             AccountService.getClientId().then(function (clientId) {
                 vm.clientId = clientId;
@@ -799,8 +1102,13 @@
             });
         }
 
-        function getAccounts(accountNo) {
-            AccountService.getAllAccounts(accountNo).get().$promise.then(function (res) {
+        /**
+         * @method getAccounts
+         * @description Get All accounts (Loan, Savings and share) from server and disable the loading
+         * @param clientId {number} Client Id
+         */
+        function getAccounts(clientId) {
+            AccountService.getAllAccounts(clientId).get().$promise.then(function (res) {
                 vm.loanAccounts = res.loanAccounts;
                 vm.savingsAccounts = res.savingsAccounts;
                 vm.shareAccounts = res.shareAccounts;
@@ -808,14 +1116,31 @@
             });
         }
 
+        /**
+         * @method onPaginate
+         * @description When the page is updated of the account list table query data again
+         * @param offset {number} What offset should the record be fetched
+         * @param limit {number} Limit the number of record to fetch
+         */
         function onPaginate(offset, limit) {
             getAccounts(angular.extend({}, vm.query, {offset: offset, limit: limit}));
         }
 
+        /**
+         * @method onReorder
+         * @description Handle table updates when its sorted using column headers
+         * @param order
+         */
         function onReorder(order) {
             getAccounts(angular.extend({}, vm.query, {order: order}));
         }
 
+        /**
+         * @method routeTo
+         * @description When account is clicked handle routing to take user to account detail page
+         * @param accountType {string} type of account clicked (loan, savings, charge)
+         * @param id {number} id of the clicked account
+         */
         function routeTo(accountType, id) {
             var routingSlug = 'viewloanaccount';
             if ('savings' == accountType) {
@@ -837,6 +1162,11 @@
     angular.module('selfService')
         .service('AccountTransferService', ['$resource', 'BASE_URL', AccountTransferService]);
 
+    /**
+     * @module AccountTransferService
+     * @description
+     * Service required for Account Transfer
+     */
     function AccountTransferService($resource, BASE_URL) {
 
         this.getTransferTemplate = function () {
@@ -857,14 +1187,32 @@
     angular.module('selfService')
         .controller('AccountTransferCtrl', ['$scope', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', AccountTransferCtrl]);
 
+    /**
+     * @module AccountTransferCtrl
+     * @description
+     * Account Transfer Controller
+     */
     function AccountTransferCtrl($scope, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
 
         var vm = this;
-        vm.fromAccountOptions = [];
-        vm.toAccountOptions = [];
-        vm.transferFormData = getTransferFormDataObj()
 
+        /**
+         * @name fromAccountOptions
+         * @type {Array}
+         * @description From account options to do transfer from
+         */
+        vm.fromAccountOptions = [];
+
+        /**
+         * @name toAccountOptions
+         * @type {Array}
+         * @description Perform transfer to what account, to acount options
+         */
+        vm.toAccountOptions = [];
+
+        vm.transferFormData = getTransferFormDataObj();
         vm.getTransferTemplate = getTransferTemplate();
+
         vm.submit = submit;
 
         // FORMAT THE DATE FOR THE DATEPICKER
@@ -872,12 +1220,21 @@
             return $filter('date')(date, "dd-MM-yyyy");
         };
 
+        /**
+         * @method getTransferFormDataObj
+         * @returns {{transferDate: Date}}
+         * @description gets the transfer form data object to be sent to the server
+         */
         function getTransferFormDataObj() {
             return {
                 transferDate: new Date()
             };
         }
 
+        /**
+         * @method getTransferTemplate
+         * @description Gets the template from the server to do a transfer
+         */
         function getTransferTemplate() {
             AccountTransferService.getTransferTemplate().get(function (data) {
                 vm.fromAccountOptions = data.fromAccountOptions;
@@ -885,95 +1242,20 @@
             });
         }
 
+        /**
+         * @method clearForm
+         * @description clears the form
+         */
         function clearForm() {
             $scope.transferForm.$setPristine();
             vm.transferFormData = getTransferFormDataObj();
         }
 
-        function submit(ev) {
-            $mdDialog.show({
-                controller: 'ReviewTransferDialogCtrl',
-                controllerAs: 'vm',
-                templateUrl: 'src/transfers/review-transfer-dialog/review-transfer-dialog.html',
-                parent: angular.element(document.body),
-                targetEvent: ev,
-                locals: {transferFormData: vm.transferFormData},
-                clickOutsideToClose: true
-            }).then(function (result) {
-                if(result === "success"){
-                    clearForm();
-                }
-            }, function () {
-                clearForm();
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Transfer Cancelled')
-                        .position('top right')
-                );
-            });
-        }
-
-
-    }
-})();
-(function () {
-    'use strict';
-    angular.module('selfService')
-        .service('AccountTransferService', ['$resource', 'BASE_URL', AccountTransferService]);
-
-    function AccountTransferService($resource, BASE_URL) {
-
-        this.getTransferTemplate = function () {
-            return $resource(BASE_URL + '/self/accounttransfers/template');
-        }
-
-        this.transfer = function () {
-            return $resource(BASE_URL + '/self/accounttransfers');
-        }
-
-    }
-
-})();
-
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .controller('AccountTransferCtrl', ['$scope', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', AccountTransferCtrl]);
-
-    function AccountTransferCtrl($scope, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
-
-        var vm = this;
-        vm.fromAccountOptions = [];
-        vm.toAccountOptions = [];
-        vm.transferFormData = getTransferFormDataObj()
-
-        vm.getTransferTemplate = getTransferTemplate();
-        vm.submit = submit;
-
-        // FORMAT THE DATE FOR THE DATEPICKER
-        $mdDateLocale.formatDate = function (date) {
-            return $filter('date')(date, "dd-MM-yyyy");
-        };
-
-        function getTransferFormDataObj() {
-            return {
-                transferDate: new Date()
-            };
-        }
-
-        function getTransferTemplate() {
-            AccountTransferService.getTransferTemplate().get(function (data) {
-                vm.fromAccountOptions = data.fromAccountOptions;
-                vm.toAccountOptions = data.toAccountOptions;
-            });
-        }
-
-        function clearForm() {
-            $scope.transferForm.$setPristine();
-            vm.transferFormData = getTransferFormDataObj();
-        }
-
+        /**
+         * @method submit
+         * @param ev
+         * @description Sends data to server and performs transfer
+         */
         function submit(ev) {
             $mdDialog.show({
                 controller: 'ReviewTransferDialogCtrl',
@@ -1006,27 +1288,54 @@
     angular.module('selfService')
         .controller('TPTCtrl', ['$scope', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
 
+    /**
+     * @module TPTCtrl
+     * @description
+     * Third party transfer controller
+     */
     function TPTCtrl($scope, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
 
         var vm = this;
-        vm.fromAccountOptions = [];
-        vm.toAccountOptions = [];
-        vm.transferFormData = getTransferFormDataObj()
 
+        /**
+         * @name fromAccountOptions
+         * @type {Array}
+         * @description From account options to do a third party transfer
+         */
+        vm.fromAccountOptions = [];
+
+        /**
+         * @name toAccountOptions
+         * @type {Array}
+         * @description To account options to do a third party transfer
+         */
+        vm.toAccountOptions = [];
+
+        vm.transferFormData = getTransferFormDataObj()
         vm.getTransferTemplate = getTransferTemplate();
+
         vm.submit = submit;
 
-        // FORMAT THE DATE FOR THE DATEPICKER
+        // Format date for the DatePicker
         $mdDateLocale.formatDate = function (date) {
             return $filter('date')(date, "dd-MM-yyyy");
         };
 
+        /**
+         * @method getTransferFormDataObj
+         * @returns {{transferDate: Date}}
+         * @description Gets the transferFormObj to be sent to server to do a transfer
+         */
         function getTransferFormDataObj() {
             return {
                 transferDate: new Date()
             };
         }
 
+        /**
+         * @method getTransferTemplate
+         * @description Returns template from the server for the form to do a third party transfer
+         */
         function getTransferTemplate() {
             AccountTransferService.getTransferTemplate().get({type: "tpt"},function (data) {
                 vm.fromAccountOptions = data.fromAccountOptions;
@@ -1034,11 +1343,20 @@
             });
         }
 
+        /**
+         * @method clearForm
+         * @description To clear form
+         */
         function clearForm() {
             $scope.transferForm.$setPristine();
             vm.transferFormData = getTransferFormDataObj();
         }
 
+        /**
+         * @method submit
+         * @param ev
+         * @description To send form data to perform tpt to the server
+         */
         function submit(ev) {
             $mdDialog.show({
                 controller: 'ReviewTransferDialogCtrl',
@@ -1070,6 +1388,11 @@
     angular.module('selfService')
         .service('TransactionService', ['$resource', 'BASE_URL', TransactionService]);
 
+    /**
+     * @module TransactionService
+     * @description
+     * Service required for Transactions
+     */
     function TransactionService($resource, BASE_URL) {
 
         this.getClientTransactions = function (clientId) {
@@ -1086,13 +1409,42 @@
     angular.module('selfService')
         .controller('RecentTransactionCtrl', ['AccountService', 'TransactionService', RecentTransactionCtrl]);
 
+    /**
+     * @module RecentTransactionCtrl
+     * @description
+     * Gets the recent transactions of the client
+     */
     function RecentTransactionCtrl(AccountService, TransactionService) {
 
         var vm = this;
+
+        /**
+         * @name loadingTransactions
+         * @type {boolean}
+         * @description Flag to keep check if transactions have been loaded
+         */
         vm.loadingTransactions 	= true;
+
+        /**
+         * @name recenttransactions
+         * @type {object}
+         * @description keeps the recent transactions returned from the server
+         */
         vm.recenttransactions = {};
         vm.onPaginate = onPaginate;
+
+        /**
+         * @name page
+         * @type {number}
+         * @description keeps track of the page you're on
+         */
         vm.page = 1;
+
+        /**
+         * @name query
+         * @type {{limit: number, offset: number}}
+         * @description Queries data from the server with the parameters
+         */
         vm.query = {
             limit: 5,
             offset: 0
@@ -1100,6 +1452,11 @@
 
         vm.getTransactions = getTransactions(vm.query);
 
+        /**
+         * @method getTransactions
+         * @param query
+         * @description Gets Transactions from the server
+         */
         function getTransactions(query){
             AccountService.getClientId().then(function (clientId){
                 TransactionService.getClientTransactions(clientId).get(query).$promise.then(function (res) {
@@ -1109,6 +1466,12 @@
             });
         }
 
+        /**
+         * @method onPaginate
+         * @param offset
+         * @param limit
+         * @description Query server according to filters set for recent transactions
+         */
         function onPaginate(offset,limit) {
             getTransactions(angular.extend({}, vm.query, {offset: (offset - 1) * limit, limit: limit}));
         }
@@ -1119,11 +1482,28 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('DashboardCtrl', ['$filter', 'AccountService', DashboardCtrl]);
+        .controller('DashboardCtrl', ['AccountService', DashboardCtrl]);
 
-    function DashboardCtrl($filter, AccountService) {
+    /**
+     * @module DashboardCtrl
+     * @description
+     * Controls the data of the dashboard
+     */
+    function DashboardCtrl(AccountService) {
         var vm = this;
+
+        /**
+         * @name dashboardData
+         * @type {object}
+         * @description Stores the dashboard data returned from the server
+         */
         vm.dashboardData = {};
+
+        /**
+         * @name options
+         * @type {{chart: {type: string, height: number, showLabels: boolean, x: module:DashboardCtrl.options.chart.x, y: module:DashboardCtrl.options.chart.y, duration: number, labelSunbeamLayout: boolean}}}
+         * @description Configuration for pie charts on the dashboard
+         */
         vm.options = {
             chart: {
                 type: 'pieChart',
@@ -1138,6 +1518,10 @@
 
         vm.getDashboardData = getDashboardData();
 
+        /**
+         * @method getDashboardData
+         * @description Gets Dashboard data from the server
+         */
         function getDashboardData() {
             AccountService.getClientId().then(function (clientId) {
                 AccountService.getAllAccounts(clientId).get().$promise.then(function(data) {
@@ -1154,6 +1538,13 @@
             })
         }
 
+        /**
+         * @method getTotalSavings
+         * @param total
+         * @param acc
+         * @description Reducer for chart data to get total savings balance
+         * @returns {number}
+         */
         function getTotalSavings(total, acc) {
             if(acc.accountBalance) {
                 return total + acc.accountBalance;
@@ -1162,6 +1553,13 @@
             }
         }
 
+        /**
+         * @method getTotalLoan
+         * @param total
+         * @param acc
+         * @description Reducer to find out total loan amount of the client
+         * @returns {number}
+         */
         function getTotalLoan(total, acc) {
             if(acc.loanBalance) {
                 return total + acc.loanBalance;
@@ -1170,6 +1568,12 @@
             }
         }
 
+        /**
+         * @method getChartData
+         * @param accounts
+         * @description modifies data to fill in the pie charts
+         * @returns {Array}
+         */
         function getChartData(accounts) {
             var chartObj = {};
             accounts.map(function(acc) {
@@ -1185,15 +1589,17 @@
             }
             return chartData;
         }
-
-
     }
 })();
 (function () {
     'use strict';
     angular.module('selfService')
         .service('ChargesService', ['$resource', 'BASE_URL', ChargesService]);
-
+    /**
+     * @module ChargesService
+     * @description
+     * Service required for managing charges
+     */
     function ChargesService($resource, BASE_URL) {
 
         this.getClientCharges = function (clientId) {
@@ -1210,13 +1616,43 @@
     angular.module('selfService')
         .controller('ChargesCtrl', ['AccountService', 'ChargesService', ChargesCtrl]);
 
+    /**
+     * @module ChargesCtrl
+     * @description
+     * Charges Controller
+     */
     function ChargesCtrl(AccountService, ChargesService) {
 
         var vm = this;
+
+        /**
+         * @name loadingCharges
+         * @type {boolean}
+         * @description Flag to check if data loaded from the server
+         */
         vm.loadingCharges = true;
+
+        /**
+         * @name charges
+         * @type {object}
+         * @description Stores the charges returned from the server
+         */
         vm.charges = {};
+
         vm.onPaginate = onPaginate;
+
+        /**
+         * @name page
+         * @type {number}
+         * @description keeps track of the page you're on
+         */
         vm.page = 1;
+
+        /**
+         * @name query
+         * @type {{limit: number, offset: number}}
+         * @description Queries the server for paginated data
+         */
         vm.query = {
             limit: 5,
             offset: 0
@@ -1224,6 +1660,11 @@
 
         vm.getCharges = getCharges(vm.query);
 
+        /**
+         * @method getCharges
+         * @param query
+         * @description Gets charges from the server
+         */
         function getCharges(query){
             AccountService.getClientId().then(function (clientId){
                 ChargesService.getClientCharges(clientId).get(query).$promise.then(function (res) {
@@ -1233,6 +1674,12 @@
             });
         }
 
+        /**
+         * @method onPaginate
+         * @param offset
+         * @param limit
+         * @description When the page is paginated handles returning data from the server
+         */
         function onPaginate(offset,limit) {
             getCharges(angular.extend({}, vm.query, {offset: (offset - 1) * limit, limit: limit}));
         }
@@ -1245,6 +1692,11 @@
     angular.module('selfService')
         .service('BeneficiariesService', ['$resource', 'BASE_URL', BeneficiariesService]);
 
+    /**
+     * @module BeneficiariesService
+     * @description
+     * Service required for Beneficiaries
+     */
     function BeneficiariesService($resource, BASE_URL) {
 
         this.getBeneficiaries = function () {
@@ -1271,6 +1723,11 @@
     angular.module('selfService')
         .service('AuthService', ['$http', '$state', '$resource', 'storageService', 'BASE_URL', 'USER_ROLES', AuthService]);
 
+    /**
+     * @module AuthService
+     * @description
+     * Service required for Authentication
+     */
     function AuthService($http, $state, $resource, storageService, BASE_URL, USER_ROLES) {
 
         var role            = '',
@@ -1330,54 +1787,6 @@
             setAccessToken('');
             storageService.clear();
             $state.go('login');
-        }
-
-    }
-
-})();
-
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .controller('LoginCtrl', ['$scope', '$state', '$mdToast', 'AuthService', 'AccountService', LoginCtrl]);
-
-    function LoginCtrl($scope, $state, $mdToast, AuthService, AccountService) {
-
-        $scope.doLogin = function () {
-            AuthService.doLogin($scope.loginData).save().$promise.then(function (result) {
-                AuthService.setUser(result);
-                AccountService.getClients().get().$promise
-                    .then(function (res) {
-                        if (res.pageItems.length !== 0) {
-                            AccountService.setClientId(res.pageItems[0].id);
-                            $mdToast.show(
-                                $mdToast.simple()
-                                    .content("Successful Login")
-                                    .hideDelay(2000)
-                                    .position('top right')
-                            );
-                            $state.go("app.dashboard");
-                        } else {
-                            $mdToast.show(
-                                $mdToast.simple()
-                                    .content("No Clients Found")
-                                    .hideDelay(2000)
-                                    .position('top right')
-                            );
-                            AuthService.logout();
-                        }
-                    })
-                    .catch(function () {
-                        $mdToast.show(
-                            $mdToast.simple()
-                                .content("Not a Self Service User")
-                                .hideDelay(2000)
-                                .position('top right')
-                        );
-                        AuthService.logout();
-                    })
-            });
         }
 
     }

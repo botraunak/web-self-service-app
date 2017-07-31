@@ -463,6 +463,137 @@ md-toolbar .md-menu {
   color: white;
 }
 
+#forgot-password {
+  height: 100%;
+  width: 100%;
+  background: url("../assets/images/cover.png") no-repeat;
+  background-size: cover;
+}
+#forgot-password #forgot-password-form-wrapper {
+  -ms-flex: 1 0 auto;
+      flex: 1 0 auto;
+  padding: 32px;
+}
+#forgot-password #forgot-password-form-wrapper #forgot-password-form {
+  width: 384px;
+  max-width: 384px;
+  padding: 32px;
+  text-align: center;
+  background: #FFFFFF;
+}
+#forgot-password #forgot-password-form-wrapper #forgot-password-form .logo {
+  width: 128px;
+  height: 128px;
+  line-height: 128px;
+  font-size: 86px;
+  font-weight: 500;
+  margin: 32px auto;
+  color: #FFFFFF;
+  border-radius: 2px;
+}
+#forgot-password #forgot-password-form-wrapper #forgot-password-form .title {
+  font-size: 17px;
+  margin: 16px 0 32px 0;
+}
+#forgot-password #forgot-password-form-wrapper #forgot-password-form form {
+  width: 100%;
+  text-align: left;
+}
+#forgot-password #forgot-password-form-wrapper #forgot-password-form form .submit-button {
+  width: 220px;
+  margin: 16px auto;
+  display: block;
+}
+#forgot-password #forgot-password-form-wrapper #forgot-password-form .login {
+  margin: 32px auto 24px auto;
+  width: 250px;
+  font-weight: 500;
+}
+#forgot-password #forgot-password-form-wrapper #forgot-password-form .login .text {
+  margin-right: 8px;
+}
+
+@media screen and (max-width: 460px) {
+  #forgot-password #forgot-password-form-wrapper {
+    padding: 16px;
+  }
+  #forgot-password #forgot-password-form-wrapper #forgot-password-form {
+    padding: 24px;
+    width: 100%;
+  }
+  #forgot-password #forgot-password-form-wrapper #forgot-password-form form .md-button {
+    width: 90%;
+  }
+}
+#register {
+  height: 100%;
+  width: 100%;
+  background: url("../assets/images/cover.png") no-repeat;
+  background-size: cover;
+}
+#register #register-form-wrapper {
+  -ms-flex: 1 0 auto;
+      flex: 1 0 auto;
+  height: 90vh;
+  padding: 32px;
+}
+#register #register-form-wrapper #register-form {
+  width: 80%;
+  overflow: scroll;
+  max-width: 80%;
+  padding: 32px;
+  background: #FFFFFF;
+  text-align: center;
+}
+#register #register-form-wrapper #register-form .logo {
+  width: 128px;
+  height: 128px;
+  margin: 32px auto;
+}
+#register #register-form-wrapper #register-form .title {
+  margin: 16px 0 32px 0;
+  font-size: 17px;
+}
+#register #register-form-wrapper #register-form form {
+  width: 100%;
+  text-align: left;
+}
+#register #register-form-wrapper #register-form form md-checkbox {
+  margin: 0;
+}
+#register #register-form-wrapper #register-form form .terms {
+  font-size: 13px;
+  margin: 16px 0 32px 0;
+}
+#register #register-form-wrapper #register-form form .terms a {
+  margin-left: 4px;
+}
+#register #register-form-wrapper #register-form form .submit-button {
+  width: 220px;
+  margin: 16px auto;
+  display: block;
+}
+#register #register-form-wrapper #register-form .login {
+  margin: 32px auto 24px auto;
+  width: 250px;
+  font-weight: 500;
+}
+#register #register-form-wrapper #register-form .login .text {
+  margin-right: 8px;
+}
+
+@media screen and (max-width: 460px) {
+  #register #register-form-wrapper {
+    padding: 16px;
+  }
+  #register #register-form-wrapper #register-form {
+    padding: 24px;
+    width: 100%;
+  }
+  #register #register-form-wrapper #register-form form .md-button {
+    width: 90%;
+  }
+}
 .table {
   border-spacing: 0;
   width: 100%;
