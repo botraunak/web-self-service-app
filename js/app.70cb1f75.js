@@ -43,90 +43,6 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('ReviewTPTDialogCtrl', ['$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTPTDialogCtrl]);
-
-    /**
-     * @module ReviewTPTDialogCtrl
-     * @description
-     * Review Third party transfer confirm dialog
-     */
-    function ReviewTPTDialogCtrl($filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
-
-        var vm = this;
-
-        /**
-         * @name transferFormData
-         * @type {object}
-         * @description To get the form data to be sent to the server
-         */
-        vm.transferFormData = Object.assign({}, transferFormData);
-
-        vm.cancel = cancel;
-        vm.transfer = transfer;
-
-        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
-
-        /**
-         * @method cancel
-         * @description To cancel the dialog and close it
-         */
-        function cancel() {
-            $mdDialog.cancel();
-        }
-
-        /**
-         * @method transfer
-         * @description Do transfer send data to server
-         */
-        function transfer() {
-            // Transforming Request Data
-            var transferData = {
-                fromOfficeId: vm.transferFormData.fromAccount.officeId,
-                fromClientId: vm.transferFormData.fromAccount.clientId,
-                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
-                fromAccountId: vm.transferFormData.fromAccount.accountId,
-                toOfficeId: vm.transferFormData.toAccount.officeId,
-                toClientId: vm.transferFormData.toAccount.clientId,
-                toAccountType: vm.transferFormData.toAccount.accountType.id,
-                toAccountId: vm.transferFormData.toAccount.accountId,
-                dateFormat: "dd MMMM yyyy",
-                locale: "en",
-                transferDate: vm.transferFormData.transferDate,
-                transferAmount: "" + vm.transferFormData.amount,
-                transferDescription: vm.transferFormData.remark
-            }
-            // Sending
-            AccountTransferService.transfer().save({type: "tpt"},transferData).$promise.then(function () {
-               $mdDialog.hide("success");
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Transfer Completed Successfully')
-                        .position('top right')
-                );
-            }, function (resp) {
-                var errors = '';
-                if(resp.data){
-                    errors = resp.data.errors.map(function (data) {
-                        return data.defaultUserMessage;
-                    });
-                    errors.join(' ');
-                }
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Error in Completing Transfer: ' + errors)
-                        .position('top right')
-                );
-                $mdDialog.hide("error");
-
-            });
-
-        }
-    }
-})();
-(function(){
-    'use strict';
-
-    angular.module('selfService')
         .controller('ReviewTransferDialogCtrl', ['$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTransferDialogCtrl]);
 
     /**
@@ -182,6 +98,90 @@
             }
             // Sending
             AccountTransferService.transfer().save(transferData).$promise.then(function () {
+               $mdDialog.hide("success");
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Completed Successfully')
+                        .position('top right')
+                );
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Completing Transfer: ' + errors)
+                        .position('top right')
+                );
+                $mdDialog.hide("error");
+
+            });
+
+        }
+    }
+})();
+(function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('ReviewTPTDialogCtrl', ['$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTPTDialogCtrl]);
+
+    /**
+     * @module ReviewTPTDialogCtrl
+     * @description
+     * Review Third party transfer confirm dialog
+     */
+    function ReviewTPTDialogCtrl($filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
+
+        var vm = this;
+
+        /**
+         * @name transferFormData
+         * @type {object}
+         * @description To get the form data to be sent to the server
+         */
+        vm.transferFormData = Object.assign({}, transferFormData);
+
+        vm.cancel = cancel;
+        vm.transfer = transfer;
+
+        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
+
+        /**
+         * @method cancel
+         * @description To cancel the dialog and close it
+         */
+        function cancel() {
+            $mdDialog.cancel();
+        }
+
+        /**
+         * @method transfer
+         * @description Do transfer send data to server
+         */
+        function transfer() {
+            // Transforming Request Data
+            var transferData = {
+                fromOfficeId: vm.transferFormData.fromAccount.officeId,
+                fromClientId: vm.transferFormData.fromAccount.clientId,
+                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
+                fromAccountId: vm.transferFormData.fromAccount.accountId,
+                toOfficeId: vm.transferFormData.toAccount.officeId,
+                toClientId: vm.transferFormData.toAccount.clientId,
+                toAccountType: vm.transferFormData.toAccount.accountType.id,
+                toAccountId: vm.transferFormData.toAccount.accountId,
+                dateFormat: "dd MMMM yyyy",
+                locale: "en",
+                transferDate: vm.transferFormData.transferDate,
+                transferAmount: "" + vm.transferFormData.amount,
+                transferDescription: vm.transferFormData.remark
+            }
+            // Sending
+            AccountTransferService.transfer().save({type: "tpt"},transferData).$promise.then(function () {
                $mdDialog.hide("success");
                 $mdToast.show(
                     $mdToast.simple()
@@ -914,6 +914,12 @@
              */
 			vm.savingsAccountDetails = getSavingsDetail($stateParams.id);
 
+            /**
+			 * @name transactions
+             * @type {Array}
+             */
+			vm.transactions = [];
+
 			vm.getStatusClass = getStatusClass
 
             /**
@@ -922,9 +928,10 @@
 			 * @param id {number} Savings Account id
              */
 			function getSavingsDetail(id) {
-                SavingsAccountService.savingsAccount().get({id: id}).$promise.then(function(res) {
+                SavingsAccountService.savingsAccount().get({id: id, associations: 'transactions,charges'}).$promise.then(function(res) {
 					vm.loadingSavingsAccount = false;
 					vm.savingsAccountDetails = res;
+					vm.transactions = res.transactions;
 					getStatusClass();
 				});
 			}
@@ -996,17 +1003,24 @@
          */
         vm.statusClass = '';
 
+        vm.repaymentSchedule = {};
+
         /**
          * @method getLoanDetails
          * @description To get the loan details from the server
          * @param id {number} Loan Account id
          */
         function getLoanDetails(id) {
-            LoanAccountService.loanAccount().get({id: id}).$promise.then(function (res) {
+            LoanAccountService.loanAccount().get({
+                id: id,
+                associations:'repaymentSchedule,transactions'
+            }).$promise.then(function (res) {
                 vm.loadingLoanAccountInfo = false;
                 vm.loanAccountDetails = res;
+
                 getStatusClass();
             });
+
         }
 
         /**
@@ -1284,6 +1298,101 @@
 })();
 (function () {
     'use strict';
+    angular.module('selfService')
+        .service('TransactionService', ['$resource', 'BASE_URL', TransactionService]);
+
+    /**
+     * @module TransactionService
+     * @description
+     * Service required for Transactions
+     */
+    function TransactionService($resource, BASE_URL) {
+
+        this.getClientTransactions = function (clientId) {
+            return $resource(BASE_URL + '/self/clients/' + clientId + '/transactions')
+        }
+
+    }
+
+})();
+
+(function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('RecentTransactionCtrl', ['AccountService', 'TransactionService', RecentTransactionCtrl]);
+
+    /**
+     * @module RecentTransactionCtrl
+     * @description
+     * Gets the recent transactions of the client
+     */
+    function RecentTransactionCtrl(AccountService, TransactionService) {
+
+        var vm = this;
+
+        /**
+         * @name loadingTransactions
+         * @type {boolean}
+         * @description Flag to keep check if transactions have been loaded
+         */
+        vm.loadingTransactions 	= true;
+
+        /**
+         * @name recenttransactions
+         * @type {object}
+         * @description keeps the recent transactions returned from the server
+         */
+        vm.recenttransactions = {};
+        vm.onPaginate = onPaginate;
+
+        /**
+         * @name page
+         * @type {number}
+         * @description keeps track of the page you're on
+         */
+        vm.page = 1;
+
+        /**
+         * @name query
+         * @type {{limit: number, offset: number}}
+         * @description Queries data from the server with the parameters
+         */
+        vm.query = {
+            limit: 5,
+            offset: 0
+        }
+
+        vm.getTransactions = getTransactions(vm.query);
+
+        /**
+         * @method getTransactions
+         * @param query
+         * @description Gets Transactions from the server
+         */
+        function getTransactions(query){
+            AccountService.getClientId().then(function (clientId){
+                TransactionService.getClientTransactions(clientId).get(query).$promise.then(function (res) {
+                    vm.loadingTransactions = false;
+                    vm.recenttransactions = res;
+                });
+            });
+        }
+
+        /**
+         * @method onPaginate
+         * @param offset
+         * @param limit
+         * @description Query server according to filters set for recent transactions
+         */
+        function onPaginate(offset,limit) {
+            getTransactions(angular.extend({}, vm.query, {offset: (offset - 1) * limit, limit: limit}));
+        }
+
+    }
+})();
+(function () {
+    'use strict';
 
     angular.module('selfService')
         .controller('TPTCtrl', ['$scope', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
@@ -1380,101 +1489,6 @@
             });
         }
 
-
-    }
-})();
-(function () {
-    'use strict';
-    angular.module('selfService')
-        .service('TransactionService', ['$resource', 'BASE_URL', TransactionService]);
-
-    /**
-     * @module TransactionService
-     * @description
-     * Service required for Transactions
-     */
-    function TransactionService($resource, BASE_URL) {
-
-        this.getClientTransactions = function (clientId) {
-            return $resource(BASE_URL + '/self/clients/' + clientId + '/transactions')
-        }
-
-    }
-
-})();
-
-(function(){
-    'use strict';
-
-    angular.module('selfService')
-        .controller('RecentTransactionCtrl', ['AccountService', 'TransactionService', RecentTransactionCtrl]);
-
-    /**
-     * @module RecentTransactionCtrl
-     * @description
-     * Gets the recent transactions of the client
-     */
-    function RecentTransactionCtrl(AccountService, TransactionService) {
-
-        var vm = this;
-
-        /**
-         * @name loadingTransactions
-         * @type {boolean}
-         * @description Flag to keep check if transactions have been loaded
-         */
-        vm.loadingTransactions 	= true;
-
-        /**
-         * @name recenttransactions
-         * @type {object}
-         * @description keeps the recent transactions returned from the server
-         */
-        vm.recenttransactions = {};
-        vm.onPaginate = onPaginate;
-
-        /**
-         * @name page
-         * @type {number}
-         * @description keeps track of the page you're on
-         */
-        vm.page = 1;
-
-        /**
-         * @name query
-         * @type {{limit: number, offset: number}}
-         * @description Queries data from the server with the parameters
-         */
-        vm.query = {
-            limit: 5,
-            offset: 0
-        }
-
-        vm.getTransactions = getTransactions(vm.query);
-
-        /**
-         * @method getTransactions
-         * @param query
-         * @description Gets Transactions from the server
-         */
-        function getTransactions(query){
-            AccountService.getClientId().then(function (clientId){
-                TransactionService.getClientTransactions(clientId).get(query).$promise.then(function (res) {
-                    vm.loadingTransactions = false;
-                    vm.recenttransactions = res;
-                });
-            });
-        }
-
-        /**
-         * @method onPaginate
-         * @param offset
-         * @param limit
-         * @description Query server according to filters set for recent transactions
-         */
-        function onPaginate(offset,limit) {
-            getTransactions(angular.extend({}, vm.query, {offset: (offset - 1) * limit, limit: limit}));
-        }
 
     }
 })();
