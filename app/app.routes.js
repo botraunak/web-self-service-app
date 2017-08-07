@@ -206,6 +206,15 @@
                         title: 'Register User'
                     }
                 })
+                .state('confregister', {
+                    url: '/register/confirm',
+                    templateUrl: 'src/authentication/confirm/confirm.html',
+                    controller: 'ConfirmAccountCtrl',
+                    controllerAs: 'vm',
+                    data: {
+                        title: 'Register User'
+                    }
+                })
             }
         )
 })();

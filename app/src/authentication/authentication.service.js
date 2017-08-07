@@ -61,6 +61,22 @@
             return $resource(BASE_URL+'/self/authentication', data);
         }
 
+        this.register = function(data) {
+            return $http({
+                url: BASE_URL + '/self/registration',
+                method: 'POST',
+                resonseType: 'text',
+                transformResponse: function(data) {
+                    return {content: data};
+                },
+                data: data
+            });
+        }
+
+        this.verifyRegister = function() {
+            return $resource(BASE_URL + '/self/registration/user');
+        }
+
         this.logout = function() {
             role = '';
             userData = '';
