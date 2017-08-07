@@ -57,12 +57,25 @@
          * @description Store Client Id of the user
          * @type {number}
          */
-        vm.clientId = getClient();
+        vm.clientId = null;
 
+        vm.getClient = getClient;
         vm.getAccounts = getAccounts;
         vm.onPaginate = onPaginate;
         vm.onReorder = onReorder;
         vm.routeTo = routeTo;
+        vm.init = init;
+
+        // Initalize the Controller
+        vm.init();
+
+        /**
+         * @method init
+         * @description Initializes the Controller
+         */
+        function init() {
+            vm.getClient();
+        }
 
         /**
          * @method getClient
