@@ -120,7 +120,11 @@
                     controllerAs: 'vm',
                     data: {
                         title: 'Transfers',
-                        authorizedRoles: [USER_ROLES.user]
+                        authorizedRoles: [USER_ROLES.user],
+                    },
+                    params: {
+                        toAccount: null,
+                        fromAccount: null
                     }
                 })
                 .state('app.tpt', {
@@ -168,6 +172,12 @@
                         authorizedRoles: [USER_ROLES.user]
                     }
 
+                })
+                .state('app.applyloan', {
+                    url: '/loans/apply',
+                    templateUrl: 'src/loan-application/loan-application.html',
+                    controller: 'LoanApplicationCtrl',
+                    controllerAs: 'vm'
                 })
                 .state('login', {
                     url: '/login',

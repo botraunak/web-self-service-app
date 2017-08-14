@@ -14,6 +14,7 @@
   "nav.label.beneficiaries": "Beneficiaries",
   "nav.label.aboutus": "About us",
   "nav.label.help": "Help",
+  "nav.label.applyloan": "Apply For Loan",
 
   "label.heading.loans": "Loans",
   "label.heading.loanAccountList": "Loan Account List",
@@ -64,12 +65,14 @@
   "label.heading.loanAccountOverview": "Loan Account Overview",
   "label.heading.savingsAccountOverview": "Savings Account Overview",
   "label.heading.shareAccountOverview": "Share Account Overview",
+  "label.heading.applyloan": "Apply For Loan",
 
 
 
   "label.msg.loadingCharges": "Loading Charges",
   "label.msg.loadingRecentTransactions": "Loading Recent Transactions",
   "label.msg.loadingBeneficiaries": "Loading Beneficiaries",
+  "label.msg.logginIn": "Logging In",
 
   "label.input.search": "Search",
   "label.input.payTo": "Pay To",
@@ -82,9 +85,19 @@
   "label.input.accountNumber": "Account Number",
   "label.input.transferLimit": "Transfer Limit",
   "label.input.accountType": "Account Type",
+  "label.input.productOptions": "Loan Product Options",
+  "label.input.purposeOfLoan": "Purpose Of Loan",
+  "label.input.currency": "Currency",
+  "label.input.principal": "Principal",
+  "label.input.submittedOn": "Submitted On",
+  "label.input.expectedDisbursementDate": "Expected Disbursement Date",
 
   "label.btn.cancel": "Cancel",
   "label.btn.reviewTransfer": "Review Transfer",
   "label.btn.addBeneficiary": "Add Beneficiary",
-  "label.btn.editBeneficiary": "Edit Beneficiary"
+  "label.btn.editBeneficiary": "Edit Beneficiary",
+  "label.btn.deposit": "Deposit",
+  "label.btn.makepayment": "Make Payment",
+  "label.btn.transfer": "Transfer",
+  "label.btn.apply": "Apply"
 }

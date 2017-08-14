@@ -9,6 +9,7 @@
             restrict: 'E',
             controller: 'translateHelperCtrl',
             controllerAs: 'vm',
+            scope: {},
             templateUrl: 'src/common/directives/translate-helper/translate-helper.html'
         }
 
@@ -802,15 +803,20 @@
      */
     function LoginCtrl($scope, $state, $mdToast, AuthService, AccountService) {
 
+        var vm = this;
+        vm.authenticating = false;
+
         /**
          * @method doLogin
          * @description To perform the login action on the page
          */
         $scope.doLogin = function () {
+            vm.authenticating = true;
             AuthService.doLogin($scope.loginData).save().$promise.then(function (result) {
                 AuthService.setUser(result);
                 AccountService.getClients().get().$promise
                     .then(function (res) {
+                        vm.authenticating = false;
                         if (res.pageItems.length !== 0) {
                             AccountService.setClientId(res.pageItems[0].id);
                             $mdToast.show(
@@ -831,6 +837,7 @@
                         }
                     })
                     .catch(function () {
+                        vm.authenticating = false;
                         $mdToast.show(
                             $mdToast.simple()
                                 .content("Not a Self Service User")
@@ -883,13 +890,13 @@
 	'use strict';
 
 		angular.module('selfService')
-			.controller('SavingsAccountViewCtrl', ['$stateParams', '$filter', 'SavingsAccountService', SavingsAccountViewCtrl]);
+			.controller('SavingsAccountViewCtrl', ['$state', '$stateParams', '$filter', 'SavingsAccountService', SavingsAccountViewCtrl]);
 		/**
 		 * @module SavingsAccountViewCtrl
 		 * @description
 		 * Handles the individial savings account detail page
 		 */
-		function SavingsAccountViewCtrl($stateParams, $filter, SavingsAccountService) {
+		function SavingsAccountViewCtrl($state, $stateParams, $filter, SavingsAccountService) {
 
 			var vm = this;
 
@@ -920,7 +927,9 @@
              */
 			vm.transactions = [];
 
-			vm.getStatusClass = getStatusClass
+			vm.getStatusClass = getStatusClass;
+			vm.deposit = deposit;
+			vm.transfer = transfer;
 
             /**
 			 * @method getSavingsDetail
@@ -949,6 +958,18 @@
 
 				vm.statusClass = statusClass;
 			}
+
+			function deposit() {
+				$state.go('app.transfers', {
+					toAccount: vm.savingsAccountDetails
+				});
+			}
+
+			function transfer() {
+				$state.go('app.transfers', {
+					fromAccount: vm.savingsAccountDetails
+				});
+			}
 		}
 })();
 (function () {
@@ -971,14 +992,14 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('LoanAccountViewCtrl', ['$stateParams', '$filter', 'LoanAccountService', LoanAccountViewCtrl]);
+        .controller('LoanAccountViewCtrl', ['$state', '$stateParams', '$filter', 'LoanAccountService', LoanAccountViewCtrl]);
 
     /**
      * @module LoanAccountViewCtrl
      * @description
      * Handles the Loan Account Details Page.
      */
-    function LoanAccountViewCtrl($stateParams, $filter, LoanAccountService) {
+    function LoanAccountViewCtrl($state, $stateParams, $filter, LoanAccountService) {
 
         var vm = this;
 
@@ -1005,6 +1026,8 @@
 
         vm.repaymentSchedule = {};
 
+        vm.makePayment = makePayment;
+
         /**
          * @method getLoanDetails
          * @description To get the loan details from the server
@@ -1017,10 +1040,8 @@
             }).$promise.then(function (res) {
                 vm.loadingLoanAccountInfo = false;
                 vm.loanAccountDetails = res;
-
                 getStatusClass();
             });
-
         }
 
         /**
@@ -1033,8 +1054,13 @@
             if (vm.loanAccountDetails.inArrears) {
                 statusClass += 'overdue';
             }
-
             vm.statusClass = statusClass;
+        }
+
+        function makePayment() {
+            $state.go('app.transfers', {
+                toAccount: vm.loanAccountDetails
+            });
         }
     }
 })();
@@ -1199,14 +1225,14 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('AccountTransferCtrl', ['$scope', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', AccountTransferCtrl]);
+        .controller('AccountTransferCtrl', ['$scope', '$stateParams', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', AccountTransferCtrl]);
 
     /**
      * @module AccountTransferCtrl
      * @description
      * Account Transfer Controller
      */
-    function AccountTransferCtrl($scope, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
+    function AccountTransferCtrl($scope, $stateParams, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
 
         var vm = this;
 
@@ -1223,6 +1249,9 @@
          * @description Perform transfer to what account, to acount options
          */
         vm.toAccountOptions = [];
+
+        vm.disabledToAccount = false;
+        vm.disabledfromAccount = false;
 
         vm.transferFormData = getTransferFormDataObj();
         vm.getTransferTemplate = getTransferTemplate();
@@ -1253,6 +1282,28 @@
             AccountTransferService.getTransferTemplate().get(function (data) {
                 vm.fromAccountOptions = data.fromAccountOptions;
                 vm.toAccountOptions = data.toAccountOptions;
+
+                if($stateParams.toAccount) {
+                    var i = 0;
+                    for(i=0; i < vm.toAccountOptions.length; i++) {
+                        if(vm.toAccountOptions[i].accountNo == $stateParams.toAccount.accountNo) {
+                            vm.transferFormData.toAccount = vm.toAccountOptions[i];
+                            vm.disabledToAccount = true;
+                            break;
+                        }
+                    }
+                }
+
+                if($stateParams.fromAccount) {
+                    for(i=0; i < vm.fromAccountOptions.length; i++) {
+                        if(vm.fromAccountOptions[i].accountNo == $stateParams.fromAccount.accountNo) {
+                            vm.transferFormData.fromAccount = vm.fromAccountOptions[i];
+                            vm.disabledfromAccount = true;
+                            break;
+                        }
+                    }
+                }
+
             });
         }
 
@@ -1269,6 +1320,107 @@
          * @method submit
          * @param ev
          * @description Sends data to server and performs transfer
+         */
+        function submit(ev) {
+            $mdDialog.show({
+                controller: 'ReviewTransferDialogCtrl',
+                controllerAs: 'vm',
+                templateUrl: 'src/transfers/review-transfer-dialog/review-transfer-dialog.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                locals: {transferFormData: vm.transferFormData},
+                clickOutsideToClose: true
+            }).then(function (result) {
+                if(result === "success"){
+                    clearForm();
+                }
+            }, function () {
+                clearForm();
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Cancelled')
+                        .position('top right')
+                );
+            });
+        }
+
+
+    }
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('TPTCtrl', ['$scope', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
+
+    /**
+     * @module TPTCtrl
+     * @description
+     * Third party transfer controller
+     */
+    function TPTCtrl($scope, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
+
+        var vm = this;
+
+        /**
+         * @name fromAccountOptions
+         * @type {Array}
+         * @description From account options to do a third party transfer
+         */
+        vm.fromAccountOptions = [];
+
+        /**
+         * @name toAccountOptions
+         * @type {Array}
+         * @description To account options to do a third party transfer
+         */
+        vm.toAccountOptions = [];
+
+        vm.transferFormData = getTransferFormDataObj()
+        vm.getTransferTemplate = getTransferTemplate();
+
+        vm.submit = submit;
+
+        // Format date for the DatePicker
+        $mdDateLocale.formatDate = function (date) {
+            return $filter('date')(date, "dd-MM-yyyy");
+        };
+
+        /**
+         * @method getTransferFormDataObj
+         * @returns {{transferDate: Date}}
+         * @description Gets the transferFormObj to be sent to server to do a transfer
+         */
+        function getTransferFormDataObj() {
+            return {
+                transferDate: new Date()
+            };
+        }
+
+        /**
+         * @method getTransferTemplate
+         * @description Returns template from the server for the form to do a third party transfer
+         */
+        function getTransferTemplate() {
+            AccountTransferService.getTransferTemplate().get({type: "tpt"},function (data) {
+                vm.fromAccountOptions = data.fromAccountOptions;
+                vm.toAccountOptions = data.toAccountOptions;
+            });
+        }
+
+        /**
+         * @method clearForm
+         * @description To clear form
+         */
+        function clearForm() {
+            $scope.transferForm.$setPristine();
+            vm.transferFormData = getTransferFormDataObj();
+        }
+
+        /**
+         * @method submit
+         * @param ev
+         * @description To send form data to perform tpt to the server
          */
         function submit(ev) {
             $mdDialog.show({
@@ -1391,105 +1543,108 @@
 
     }
 })();
-(function () {
+(function() {
     'use strict';
 
     angular.module('selfService')
-        .controller('TPTCtrl', ['$scope', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
+        .service('LoanApplicationService', ['$resource', 'BASE_URL', LoanApplicationService]);
 
     /**
-     * @module TPTCtrl
+     * @module LoanApplicationService
      * @description
-     * Third party transfer controller
+     * Service required for Loan Application
      */
-    function TPTCtrl($scope, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
+    function LoanApplicationService($resource, BASE_URL) {
 
-        var vm = this;
-
-        /**
-         * @name fromAccountOptions
-         * @type {Array}
-         * @description From account options to do a third party transfer
-         */
-        vm.fromAccountOptions = [];
-
-        /**
-         * @name toAccountOptions
-         * @type {Array}
-         * @description To account options to do a third party transfer
-         */
-        vm.toAccountOptions = [];
-
-        vm.transferFormData = getTransferFormDataObj()
-        vm.getTransferTemplate = getTransferTemplate();
-
-        vm.submit = submit;
-
-        // Format date for the DatePicker
-        $mdDateLocale.formatDate = function (date) {
-            return $filter('date')(date, "dd-MM-yyyy");
-        };
-
-        /**
-         * @method getTransferFormDataObj
-         * @returns {{transferDate: Date}}
-         * @description Gets the transferFormObj to be sent to server to do a transfer
-         */
-        function getTransferFormDataObj() {
-            return {
-                transferDate: new Date()
-            };
+        this.template = function() {
+            return $resource(BASE_URL + '/self/loans/template');
         }
 
-        /**
-         * @method getTransferTemplate
-         * @description Returns template from the server for the form to do a third party transfer
-         */
-        function getTransferTemplate() {
-            AccountTransferService.getTransferTemplate().get({type: "tpt"},function (data) {
-                vm.fromAccountOptions = data.fromAccountOptions;
-                vm.toAccountOptions = data.toAccountOptions;
+        this.loan = function() {
+            return $resource(BASE_URL + '/self/loans');
+        }
+    }
+
+})();
+(function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('LoanApplicationCtrl', ['$filter', '$mdToast', 'AccountService', 'LoanApplicationService', LoanApplicationCtrl]);
+
+    /**
+     * @module LoanApplicationCtrl
+     * @description
+     * Controls Application for Loan
+     */
+    function LoanApplicationCtrl($filter, $mdToast, AccountService, LoanApplicationService) {
+        var vm = this;
+
+        vm.form = {
+            locale: 'en_GB',
+            dateFormat: 'dd MMMM yyyy',
+            loanType: 'individual'
+        };
+        vm.template = {};
+        vm.clientId = null;
+
+        vm.init = init;
+        vm.getLoanTemplate = getLoanTemplate;
+        vm.submit = submit;
+
+        init();
+
+        function init() {
+            AccountService.getClientId().then(function (clientId) {
+                vm.clientId = clientId;
+                getLoanTemplate(clientId, null);
             });
         }
 
-        /**
-         * @method clearForm
-         * @description To clear form
-         */
-        function clearForm() {
-            $scope.transferForm.$setPristine();
-            vm.transferFormData = getTransferFormDataObj();
+        function getLoanTemplate(clientId, productId) {
+            LoanApplicationService.template().get({
+                templateType: 'individual',
+                clientId: clientId,
+                productId: productId
+            }).$promise.then(function(template) {
+                vm.template = template;
+                vm.form.principal = vm.template.principal;
+                vm.form.submittedOnDate = $filter('date','dd MMMM yyyy')(new Date(), 'dd MMMM yyyy');
+                vm.form.expectedDisbursementDate = $filter('date')(new Date(), 'dd MMMM yyyy');
+            });
         }
 
-        /**
-         * @method submit
-         * @param ev
-         * @description To send form data to perform tpt to the server
-         */
-        function submit(ev) {
-            $mdDialog.show({
-                controller: 'ReviewTransferDialogCtrl',
-                controllerAs: 'vm',
-                templateUrl: 'src/transfers/review-transfer-dialog/review-transfer-dialog.html',
-                parent: angular.element(document.body),
-                targetEvent: ev,
-                locals: {transferFormData: vm.transferFormData},
-                clickOutsideToClose: true
-            }).then(function (result) {
-                if(result === "success"){
-                    clearForm();
-                }
-            }, function () {
-                clearForm();
+        function submit() {
+            var loanTemp = {
+                clientId: vm.clientId,
+                loanTermFrequency: vm.template.termFrequency,
+                loanTermFrequencyType: vm.template.termPeriodFrequencyType.id,
+                numberOfRepayments: vm.template.numberOfRepayments,
+                repaymentEvery: vm.template.repaymentEvery,
+                repaymentFrequencyType: vm.template.repaymentFrequencyType.id,
+                interestRatePerPeriod: vm.template.interestRatePerPeriod,
+                amortizationType: vm.template.amortizationType.id,
+                interestType: vm.template.interestType.id,
+                interestCalculationPeriodType: vm.template.interestCalculationPeriodType.id,
+                transactionProcessingStrategyId: vm.template.transactionProcessingStrategyId
+            };
+            var data = Object.assign({}, loanTemp, vm.form);
+            LoanApplicationService.loan().save(data).$promise.then(function(resp) {
                 $mdToast.show(
                     $mdToast.simple()
-                        .textContent('Transfer Cancelled')
+                        .content("Loan Application Submitted Successfully")
+                        .hideDelay(2000)
+                        .position('top right')
+                );
+            }, function(){
+                $mdToast.show(
+                    $mdToast.simple()
+                        .content("Error Creating Loan Application")
+                        .hideDelay(2000)
                         .position('top right')
                 );
             });
         }
-
-
     }
 })();
 (function(){
