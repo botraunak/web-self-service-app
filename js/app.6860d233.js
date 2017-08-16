@@ -40,6 +40,28 @@
 
 })();
 
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .directive('apiValidate', ['$compile', apiValidate]);
+
+    function apiValidate($compile) {
+        return {
+            restrict: 'E',
+            link: function (scope, elm) {
+                var template = '<div class="required" ng-show="respERROR">' +
+                    '<div ng-repeat="errorArray in respERROR.data.errors">' +
+                    '<label><i class="fa fa-exclamation-circle"></i> ' +
+                    '{{' + 'errorArray.userMessageGlobalisationCode' + ' | translate:error.args }}' +
+                    '</label>' +
+                '</div></div></div><br/>';
+                elm.html('').append($compile(template)(scope));
+            }
+        };
+    }
+
+})();
 (function(){
     'use strict';
 
@@ -458,6 +480,39 @@
     'use strict';
 
     angular.module('selfService')
+        .factory('APIRequestInterceptor', ['$rootScope', '$q', APIRequestInterceptor]);
+
+    function APIRequestInterceptor($rootScope, $q) {
+        return {
+            request: function(config) {
+                $rootScope.blockUI = true;
+                $rootScope.respERROR = null;
+                return $q.resolve(config);
+            },
+            requestError: function (rejection) {
+                $rootScope.blockUI = false;
+                $rootScope.respERROR = null;
+                return $q.reject(rejection);
+            },
+            response: function(response) {
+                $rootScope.blockUI = false;
+                $rootScope.respERROR = null;
+                return $q.resolve(response);
+            },
+            responseError: function(response) {
+                $rootScope.blockUI = false;
+                $rootScope.respERROR = response;
+                return $q.reject(response);
+            }
+        }
+    }
+
+})();
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
         .controller('BeneficiariesListCtrl', ['$state', '$mdDialog', '$mdToast', 'BeneficiariesService', BeneficiariesListCtrl]);
 
     /**
@@ -645,10 +700,11 @@
          * @description Clears Beneficiary Form
          */
         function clearForm() {
-            $scope.editBeneficiaryForm.$setPristine();
             vm.editBeneficiaryFormData = {
                 "locale": "en_GB"
             };
+            $scope.editBeneficiaryForm.$setPristine();
+            $scope.addBeneficiaryForm.$setUntouched();
         }
 
         /**
@@ -736,10 +792,11 @@
          * @description Function to clear form
          */
         function clearForm() {
-            $scope.addBeneficiaryForm.$setPristine();
             vm.addBeneficiaryFormData = {
                 "locale": "en_GB"
             };
+            $scope.addBeneficiaryForm.$setPristine();
+            $scope.addBeneficiaryForm.$setUntouched();
         }
 
         /**
@@ -874,98 +931,6 @@
     'use strict';
     //@todo Move this service to the common folder
     angular.module('selfService')
-        .service('LoanAccountService', ['$resource', 'BASE_URL', LoanAccountService]);
-
-    function LoanAccountService($resource, BASE_URL) {
-
-        this.loanAccount = function () {
-            return $resource(BASE_URL + '/self/loans/:id',{id: '@id'});
-        }
-    }
-
-})();
-
-
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .controller('LoanAccountViewCtrl', ['$state', '$stateParams', '$filter', 'LoanAccountService', LoanAccountViewCtrl]);
-
-    /**
-     * @module LoanAccountViewCtrl
-     * @description
-     * Handles the Loan Account Details Page.
-     */
-    function LoanAccountViewCtrl($state, $stateParams, $filter, LoanAccountService) {
-
-        var vm = this;
-
-        /**
-         * @name loadingLoanAccountInfo
-         * @description flag to check whether account info is loaded or not
-         * @type {boolean}
-         */
-        vm.loadingLoanAccountInfo = true;
-
-        /**
-         * @name loanAccountDetails
-         * @type {object}
-         * @description To store the loan Account details returned by server
-         */
-        vm.loanAccountDetails = getLoanDetails($stateParams.id);
-
-        /**
-         * @name statusClass
-         * @type {string}
-         * @description To store the css class for loan status [active, pending, ...]
-         */
-        vm.statusClass = '';
-
-        vm.repaymentSchedule = {};
-
-        vm.makePayment = makePayment;
-
-        /**
-         * @method getLoanDetails
-         * @description To get the loan details from the server
-         * @param id {number} Loan Account id
-         */
-        function getLoanDetails(id) {
-            LoanAccountService.loanAccount().get({
-                id: id,
-                associations:'repaymentSchedule,transactions'
-            }).$promise.then(function (res) {
-                vm.loadingLoanAccountInfo = false;
-                vm.loanAccountDetails = res;
-                getStatusClass();
-            });
-        }
-
-        /**
-         * @method getStatusClass
-         * @description To get the loan account status through the status lookup filter
-         */
-        function getStatusClass() {
-            var statusClass = $filter('StatusLookup')(vm.loanAccountDetails.status.code);
-            statusClass = 'bg_' + statusClass;
-            if (vm.loanAccountDetails.inArrears) {
-                statusClass += 'overdue';
-            }
-            vm.statusClass = statusClass;
-        }
-
-        function makePayment() {
-            $state.go('app.transfers', {
-                toAccount: vm.loanAccountDetails
-            });
-        }
-    }
-})();
-(function () {
-    'use strict';
-    //@todo Move this service to the common folder
-    angular.module('selfService')
         .service('SavingsAccountService', ['$resource', 'BASE_URL', SavingsAccountService]);
 
     function SavingsAccountService($resource, BASE_URL) {
@@ -1063,6 +1028,98 @@
 				});
 			}
 		}
+})();
+(function () {
+    'use strict';
+    //@todo Move this service to the common folder
+    angular.module('selfService')
+        .service('LoanAccountService', ['$resource', 'BASE_URL', LoanAccountService]);
+
+    function LoanAccountService($resource, BASE_URL) {
+
+        this.loanAccount = function () {
+            return $resource(BASE_URL + '/self/loans/:id',{id: '@id'});
+        }
+    }
+
+})();
+
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('LoanAccountViewCtrl', ['$state', '$stateParams', '$filter', 'LoanAccountService', LoanAccountViewCtrl]);
+
+    /**
+     * @module LoanAccountViewCtrl
+     * @description
+     * Handles the Loan Account Details Page.
+     */
+    function LoanAccountViewCtrl($state, $stateParams, $filter, LoanAccountService) {
+
+        var vm = this;
+
+        /**
+         * @name loadingLoanAccountInfo
+         * @description flag to check whether account info is loaded or not
+         * @type {boolean}
+         */
+        vm.loadingLoanAccountInfo = true;
+
+        /**
+         * @name loanAccountDetails
+         * @type {object}
+         * @description To store the loan Account details returned by server
+         */
+        vm.loanAccountDetails = getLoanDetails($stateParams.id);
+
+        /**
+         * @name statusClass
+         * @type {string}
+         * @description To store the css class for loan status [active, pending, ...]
+         */
+        vm.statusClass = '';
+
+        vm.repaymentSchedule = {};
+
+        vm.makePayment = makePayment;
+
+        /**
+         * @method getLoanDetails
+         * @description To get the loan details from the server
+         * @param id {number} Loan Account id
+         */
+        function getLoanDetails(id) {
+            LoanAccountService.loanAccount().get({
+                id: id,
+                associations:'repaymentSchedule,transactions'
+            }).$promise.then(function (res) {
+                vm.loadingLoanAccountInfo = false;
+                vm.loanAccountDetails = res;
+                getStatusClass();
+            });
+        }
+
+        /**
+         * @method getStatusClass
+         * @description To get the loan account status through the status lookup filter
+         */
+        function getStatusClass() {
+            var statusClass = $filter('StatusLookup')(vm.loanAccountDetails.status.code);
+            statusClass = 'bg_' + statusClass;
+            if (vm.loanAccountDetails.inArrears) {
+                statusClass += 'overdue';
+            }
+            vm.statusClass = statusClass;
+        }
+
+        function makePayment() {
+            $state.go('app.transfers', {
+                toAccount: vm.loanAccountDetails
+            });
+        }
+    }
 })();
 
 (function () {
@@ -1312,8 +1369,9 @@
          * @description clears the form
          */
         function clearForm() {
-            $scope.transferForm.$setPristine();
             vm.transferFormData = getTransferFormDataObj();
+            $scope.transferForm.$setPristine();
+            $scope.transferForm.$setUntouched();
         }
 
         /**
@@ -1413,8 +1471,9 @@
          * @description To clear form
          */
         function clearForm() {
-            $scope.transferForm.$setPristine();
             vm.transferFormData = getTransferFormDataObj();
+            $scope.transferForm.$setPristine();
+            $scope.transferForm.$setUntouched();
         }
 
         /**
@@ -1629,7 +1688,7 @@
                 transactionProcessingStrategyId: vm.template.transactionProcessingStrategyId
             };
             var data = Object.assign({}, loanTemp, vm.form);
-            LoanApplicationService.loan().save(data).$promise.then(function(resp) {
+            LoanApplicationService.loan().save(data).$promise.then(function() {
                 $mdToast.show(
                     $mdToast.simple()
                         .content("Loan Application Submitted Successfully")

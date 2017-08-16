@@ -30,6 +30,9 @@
         <a href="http://browsehappy.com/">upgrade your browser</a>
         to improve your experience.</p>
     <![endif]-->
+    <div id="loader" layout="row" layout-align="center center" ng-show="blockUI">
+      <md-progress-circular md-mode="indeterminate" md-diameter="50"></md-progress-circular>
+    </div>
 
     <div ui-view layout="row" layout-fill></div>
 
@@ -64,8 +67,8 @@
     <script src="app.routes.js"></script>
     <!-- build:js({.tmp/serve,.tmp/partials,src}) scripts/app.js -->
     <!-- inject:js -->
-    <script src="js/templateCacheHtml.ad6d23e1.js"></script>
-    <script src="js/app.d604e208.js"></script>
+    <script src="js/templateCacheHtml.efe4c87a.js"></script>
+    <script src="js/app.6860d233.js"></script>
     <!-- endinject -->
 
     <!-- inject:partials -->
