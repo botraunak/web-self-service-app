@@ -8,58 +8,31 @@
             <div class="title">Create an account</div>
 
             <form name="registerForm" novalidate ng-submit="vm.registerUser()">
+                <api-validate></api-validate>
                 <md-input-container class="md-block" md-no-float>
                     <input name="accNo" ng-model="vm.form.accountNumber" placeholder="Account Number"
                            required>
-                    <div ng-messages="registerForm.accountNumber.$error" role="alert">
-                        <div ng-message="required">
-                            <span>Account Number field is required</span>
-                        </div>
-                    </div>
                 </md-input-container>
 
                 <md-input-container class="md-block" md-no-float>
                     <input name="username" ng-model="vm.form.username" placeholder="Username"
                            required>
-                    <div ng-messages="registerForm.username.$error" role="alert">
-                        <div ng-message="required">
-                            <span>Username field is required</span>
-                        </div>
-                    </div>
                 </md-input-container>
 
                 <div layout="row">
                     <md-input-container flex class="md-block" md-no-float>
                         <input name="firstName" ng-model="vm.form.firstName" placeholder="First Name"
                                required>
-                        <div ng-messages="registerForm.username.$error" role="alert">
-                            <div ng-message="required">
-                                <span>First Name field is required</span>
-                            </div>
-                        </div>
                     </md-input-container>
                     <md-input-container flex class="md-block" md-no-float>
                         <input name="lastName" ng-model="vm.form.lastName" placeholder="Last Name"
                                required>
-                        <div ng-messages="registerForm.username.$error" role="alert">
-                            <div ng-message="required">
-                                <span>Last Name field is required</span>
-                            </div>
-                        </div>
                     </md-input-container>
                 </div>
 
                 <md-input-container class="md-block" md-no-float>
                     <input type="email" name="email" ng-model="vm.form.email" placeholder="Email"
                            ng-pattern="/^.+@.+\..+$/" required>
-                    <div ng-messages="registerForm.email.$error" role="alert" multiple>
-                        <div ng-message="required">
-                            <span>Email field is required</span>
-                        </div>
-                        <div ng-message="pattern">
-                            <span>Email must be a valid e-mail address</span>
-                        </div>
-                    </div>
                 </md-input-container>
 
                 <md-input-container class="md-block" md-no-float>
@@ -68,12 +41,7 @@
 
                 <md-input-container class="md-block" md-no-float>
                     <input type="password" name="password" ng-model="vm.form.password" placeholder="Password"
-                           ng-pattern="/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?!.*\s).{6,50}$/" required>
-                    <div ng-messages="registerForm.password.$error" role="alert">
-                        <div ng-message="required">
-                            <span>Password field is required</span>
-                        </div>
-                    </div>
+                           required>
                 </md-input-container>
 
                 <md-input-container class="md-block md-icon-float">

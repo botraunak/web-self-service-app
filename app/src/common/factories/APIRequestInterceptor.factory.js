@@ -23,6 +23,11 @@
             },
             responseError: function(response) {
                 $rootScope.blockUI = false;
+
+                if(response.data.content) {
+                    response.data = JSON.parse(response.data.content);
+                }
+
                 $rootScope.respERROR = response;
                 return $q.reject(response);
             }
