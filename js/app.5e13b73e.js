@@ -24,70 +24,6 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('ReviewTransferDialogCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTransferDialogCtrl]);
-
-    function ReviewTransferDialogCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
-
-        var vm = this;
-        vm.transferFormData = Object.assign({}, transferFormData);
-        vm.cancel = cancel;
-        vm.transfer = transfer;
-
-        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
-
-        function cancel() {
-            $mdDialog.cancel();
-        }
-
-        function transfer() {
-            // Transforming Request Data
-            var transferData = {
-                fromOfficeId: vm.transferFormData.fromAccount.officeId,
-                fromClientId: vm.transferFormData.fromAccount.clientId,
-                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
-                fromAccountId: vm.transferFormData.fromAccount.accountId,
-                toOfficeId: vm.transferFormData.toAccount.officeId,
-                toClientId: vm.transferFormData.toAccount.clientId,
-                toAccountType: vm.transferFormData.toAccount.accountType.id,
-                toAccountId: vm.transferFormData.toAccount.accountId,
-                dateFormat: "dd MMMM yyyy",
-                locale: "en",
-                transferDate: vm.transferFormData.transferDate,
-                transferAmount: "" + vm.transferFormData.amount,
-                transferDescription: vm.transferFormData.remark
-            }
-            // Sending
-            AccountTransferService.transfer().save(transferData).$promise.then(function () {
-               $mdDialog.hide("success");
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Transfer Completed Successfully')
-                        .position('top right')
-                );
-            }, function (resp) {
-                var errors = '';
-                if(resp.data){
-                    errors = resp.data.errors.map(function (data) {
-                        return data.defaultUserMessage;
-                    });
-                    errors.join(' ');
-                }
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Error in Completing Transfer: ' + errors)
-                        .position('top right')
-                );
-                $mdDialog.hide("error");
-
-            });
-
-        }
-    }
-})();
-(function(){
-    'use strict';
-
-    angular.module('selfService')
         .controller('ReviewTPTDialogCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTPTDialogCtrl]);
 
     function ReviewTPTDialogCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
@@ -148,6 +84,103 @@
         }
     }
 })();
+(function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('ReviewTransferDialogCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTransferDialogCtrl]);
+
+    function ReviewTransferDialogCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
+
+        var vm = this;
+        vm.transferFormData = Object.assign({}, transferFormData);
+        vm.cancel = cancel;
+        vm.transfer = transfer;
+
+        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
+
+        function cancel() {
+            $mdDialog.cancel();
+        }
+
+        function transfer() {
+            // Transforming Request Data
+            var transferData = {
+                fromOfficeId: vm.transferFormData.fromAccount.officeId,
+                fromClientId: vm.transferFormData.fromAccount.clientId,
+                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
+                fromAccountId: vm.transferFormData.fromAccount.accountId,
+                toOfficeId: vm.transferFormData.toAccount.officeId,
+                toClientId: vm.transferFormData.toAccount.clientId,
+                toAccountType: vm.transferFormData.toAccount.accountType.id,
+                toAccountId: vm.transferFormData.toAccount.accountId,
+                dateFormat: "dd MMMM yyyy",
+                locale: "en",
+                transferDate: vm.transferFormData.transferDate,
+                transferAmount: "" + vm.transferFormData.amount,
+                transferDescription: vm.transferFormData.remark
+            }
+            // Sending
+            AccountTransferService.transfer().save(transferData).$promise.then(function () {
+               $mdDialog.hide("success");
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Completed Successfully')
+                        .position('top right')
+                );
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Completing Transfer: ' + errors)
+                        .position('top right')
+                );
+                $mdDialog.hide("error");
+
+            });
+
+        }
+    }
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .factory('APIRequestInterceptor', ['$rootScope', '$q', APIRequestInterceptor]);
+
+    function APIRequestInterceptor($rootScope, $q) {
+        return {
+            request: function(config) {
+                $rootScope.blockUI = true;
+                $rootScope.respERROR = null;
+                return $q.resolve(config);
+            },
+            requestError: function (rejection) {
+                $rootScope.blockUI = false;
+                $rootScope.respERROR = null;
+                return $q.reject(rejection);
+            },
+            response: function(response) {
+                $rootScope.blockUI = false;
+                $rootScope.respERROR = null;
+                return $q.resolve(response);
+            },
+            responseError: function(response) {
+                $rootScope.blockUI = false;
+                $rootScope.respERROR = response;
+                return $q.reject(response);
+            }
+        }
+    }
+
+})();
+
 (function () {
     'use strict';
 
@@ -194,31 +227,100 @@
     'use strict';
 
     angular.module('selfService')
-        .factory('APIRequestInterceptor', ['$rootScope', '$q', APIRequestInterceptor]);
+        .controller('RegisterCtrl', ['$scope', '$state', '$mdToast', 'AuthService', 'AccountService', RegisterCtrl]);
 
-    function APIRequestInterceptor($rootScope, $q) {
-        return {
-            request: function(config) {
-                $rootScope.blockUI = true;
-                $rootScope.respERROR = null;
-                return $q.resolve(config);
-            },
-            requestError: function (rejection) {
-                $rootScope.blockUI = false;
-                $rootScope.respERROR = null;
-                return $q.reject(rejection);
-            },
-            response: function(response) {
-                $rootScope.blockUI = false;
-                $rootScope.respERROR = null;
-                return $q.resolve(response);
-            },
-            responseError: function(response) {
-                $rootScope.blockUI = false;
-                $rootScope.respERROR = response;
-                return $q.reject(response);
-            }
+    /**
+     * @module RegisterCtrl
+     * @description
+     * Handles Registration of self service user
+     */
+    function RegisterCtrl($scope, $state, $mdToast, AuthService, AccountService) {
+
+
+    }
+
+})();
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('LoginCtrl', ['$scope', '$rootScope', '$state', '$mdToast', 'AUTH_EVENTS', 'AuthService', 'AccountService', LoginCtrl]);
+
+    function LoginCtrl($scope, $rootScope, $state, $mdToast, AUTH_EVENTS, AuthService, AccountService) {
+
+        var vm = this;
+        vm.authenticating = false;
+
+        /**
+         * @method doLogin
+         * @description To perform the login action on the page
+         */
+        $scope.doLogin = function () {
+            vm.authenticating = true;
+            AuthService.doLogin($scope.loginData).save().$promise
+                .then(function (result) {
+                    AuthService.setUser(result);
+                    AccountService.getClients().get().$promise
+                        .then(function (res) {
+                            vm.authenticating = false;
+                            if (res.pageItems.length !== 0) {
+                                AccountService.setClientId(res.pageItems[0].id);
+                                $mdToast.show(
+                                    $mdToast.simple()
+                                        .content("Successful Login")
+                                        .hideDelay(2000)
+                                        .position('top right')
+                                );
+                                $state.go("app.dashboard");
+                            } else {
+                                $mdToast.show(
+                                    $mdToast.simple()
+                                        .content("No Clients Found")
+                                        .hideDelay(2000)
+                                        .position('top right')
+                                );
+                                AuthService.logout();
+                            }
+                        })
+                        .catch(function () {
+                            vm.authenticating = false;
+                            $mdToast.show(
+                                $mdToast.simple()
+                                    .content("Not a Self Service User")
+                                    .hideDelay(2000)
+                                    .position('top right')
+                            );
+                            AuthService.logout();
+                        })
+                }).catch(function () {
+                    vm.authenticating = false;
+                    $mdToast.show(
+                        $mdToast.simple()
+                            .content("Invalid Login Credentials")
+                            .hideDelay(2000)
+                            .position('top right')
+                    );
+                })
         }
+
+    }
+
+})();
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('ForgotPwdCtrl', ['$scope', '$state', '$mdToast', 'AuthService', 'AccountService', ForgotPwdCtrl]);
+
+    /**
+     * @module ForgotPwdCtrl
+     * @description
+     * Handles Forgot Password
+     */
+    function ForgotPwdCtrl($scope, $state, $mdToast, AuthService, AccountService) {
+
     }
 
 })();
@@ -425,108 +527,6 @@
 })();
 (function () {
     'use strict';
-
-    angular.module('selfService')
-        .controller('RegisterCtrl', ['$scope', '$state', '$mdToast', 'AuthService', 'AccountService', RegisterCtrl]);
-
-    /**
-     * @module RegisterCtrl
-     * @description
-     * Handles Registration of self service user
-     */
-    function RegisterCtrl($scope, $state, $mdToast, AuthService, AccountService) {
-
-
-    }
-
-})();
-
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .controller('LoginCtrl', ['$scope', '$rootScope', '$state', '$mdToast', 'AUTH_EVENTS', 'AuthService', 'AccountService', LoginCtrl]);
-
-    function LoginCtrl($scope, $rootScope, $state, $mdToast, AUTH_EVENTS, AuthService, AccountService) {
-
-        var vm = this;
-        vm.authenticating = false;
-
-        /**
-         * @method doLogin
-         * @description To perform the login action on the page
-         */
-        $scope.doLogin = function () {
-            vm.authenticating = true;
-            AuthService.doLogin($scope.loginData).save().$promise
-                .then(function (result) {
-                    AuthService.setUser(result);
-                    AccountService.getClients().get().$promise
-                        .then(function (res) {
-                            vm.authenticating = false;
-                            if (res.pageItems.length !== 0) {
-                                AccountService.setClientId(res.pageItems[0].id);
-                                $mdToast.show(
-                                    $mdToast.simple()
-                                        .content("Successful Login")
-                                        .hideDelay(2000)
-                                        .position('top right')
-                                );
-                                $state.go("app.dashboard");
-                            } else {
-                                $mdToast.show(
-                                    $mdToast.simple()
-                                        .content("No Clients Found")
-                                        .hideDelay(2000)
-                                        .position('top right')
-                                );
-                                AuthService.logout();
-                            }
-                        })
-                        .catch(function () {
-                            vm.authenticating = false;
-                            $mdToast.show(
-                                $mdToast.simple()
-                                    .content("Not a Self Service User")
-                                    .hideDelay(2000)
-                                    .position('top right')
-                            );
-                            AuthService.logout();
-                        })
-                }).catch(function () {
-                    vm.authenticating = false;
-                    $mdToast.show(
-                        $mdToast.simple()
-                            .content("Invalid Login Credentials")
-                            .hideDelay(2000)
-                            .position('top right')
-                    );
-                })
-        }
-
-    }
-
-})();
-
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .controller('ForgotPwdCtrl', ['$scope', '$state', '$mdToast', 'AuthService', 'AccountService', ForgotPwdCtrl]);
-
-    /**
-     * @module ForgotPwdCtrl
-     * @description
-     * Handles Forgot Password
-     */
-    function ForgotPwdCtrl($scope, $state, $mdToast, AuthService, AccountService) {
-
-    }
-
-})();
-
-(function () {
-    'use strict';
     //@todo Move this service to the common folder
     angular.module('selfService')
         .service('SavingsAccountService', ['$q', '$http', '$rootScope', '$resource', 'BASE_URL', SavingsAccountService]);
@@ -618,6 +618,73 @@
 			}
 		}
 })();
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('AccountCtrl', ['$scope', '$rootScope', '$state', 'AccountService', 'AuthService', AccountCtrl]);
+
+    function AccountCtrl($scope, $rootScope, $state, AccountService, AuthService) {
+
+        var vm = this;
+        vm.selected = [];
+        vm.getAccounts = getAccounts;
+        vm.onPaginate = onPaginate;
+        vm.onReorder = onReorder;
+        vm.routeTo = routeTo;
+        vm.userData = AuthService.getUser();
+        vm.clientId = getClient();//@todo check if this is behind the 2 calls
+        vm.accounts = [];
+        vm.loanAccounts = [];
+        vm.savingsAccounts = [];
+        vm.shareAccounts = [];
+        vm.loadingAccountInfo = true;
+
+        vm.query = {
+            limit: 5,
+            offset: 1
+        };
+
+        function getClient() {
+            AccountService.getClientId().then(function (clientId) {
+                vm.clientId = clientId;
+                getAccounts(clientId);
+            });
+        }
+
+        function getAccounts(accountNo) {
+            AccountService.getAllAccounts(accountNo).get().$promise.then(function (res) {
+                vm.loanAccounts = res.loanAccounts;
+                vm.savingsAccounts = res.savingsAccounts;
+                vm.shareAccounts = res.shareAccounts;
+                vm.loadingAccountInfo = false;
+            });
+        }
+
+        function onPaginate(offset, limit) {
+            getAccounts(angular.extend({}, vm.query, {offset: offset, limit: limit}));
+        }
+
+        function onReorder(order) {
+            getAccounts(angular.extend({}, vm.query, {order: order}));
+        }
+
+        function routeTo(accountType, id) {
+            var routingSlug = 'viewloanaccount';
+            if ('savings' == accountType) {
+                routingSlug = 'viewsavingsaccount';
+            } else if ('loan' == accountType) {
+                routingSlug = 'viewloanaccount';
+            } else {
+                routingSlug = 'viewshareaccount';
+            }
+            $state.go('app.'+routingSlug, {id: id});
+        }
+    }
+
+})();
+
 (function () {
     'use strict';
     //@todo Move this service to the common folder
@@ -710,73 +777,73 @@
         }
     }
 })();
-
 (function () {
     'use strict';
 
     angular.module('selfService')
-        .controller('AccountCtrl', ['$scope', '$rootScope', '$state', 'AccountService', 'AuthService', AccountCtrl]);
+        .controller('TPTCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
 
-    function AccountCtrl($scope, $rootScope, $state, AccountService, AuthService) {
+    function TPTCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
 
         var vm = this;
-        vm.selected = [];
-        vm.getAccounts = getAccounts;
-        vm.onPaginate = onPaginate;
-        vm.onReorder = onReorder;
-        vm.routeTo = routeTo;
-        vm.userData = AuthService.getUser();
-        vm.clientId = getClient();//@todo check if this is behind the 2 calls
-        vm.accounts = [];
-        vm.loanAccounts = [];
-        vm.savingsAccounts = [];
-        vm.shareAccounts = [];
-        vm.loadingAccountInfo = true;
+        vm.fromAccountOptions = [];
+        vm.toAccountOptions = [];
+        vm.transferFormData = getTransferFormDataObj()
 
-        vm.query = {
-            limit: 5,
-            offset: 1
+        vm.getTransferTemplate = getTransferTemplate();
+        vm.clearForm = clearForm;
+        vm.submit = submit;
+
+        // FORMAT THE DATE FOR THE DATEPICKER
+        $mdDateLocale.formatDate = function (date) {
+            return $filter('date')(date, "dd-MM-yyyy");
         };
 
-        function getClient() {
-            AccountService.getClientId().then(function (clientId) {
-                vm.clientId = clientId;
-                getAccounts(clientId);
+        function getTransferFormDataObj() {
+            return {
+                transferDate: new Date()
+            };
+        }
+
+        function getTransferTemplate() {
+            AccountTransferService.getTransferTemplate().get({type: "tpt"},function (data) {
+                vm.fromAccountOptions = data.fromAccountOptions;
+                vm.toAccountOptions = data.toAccountOptions;
             });
         }
 
-        function getAccounts(accountNo) {
-            AccountService.getAllAccounts(accountNo).get().$promise.then(function (res) {
-                vm.loanAccounts = res.loanAccounts;
-                vm.savingsAccounts = res.savingsAccounts;
-                vm.shareAccounts = res.shareAccounts;
-                vm.loadingAccountInfo = false;
+        function clearForm() {
+            vm.transferFormData = getTransferFormDataObj();
+            $scope.transferForm.$setPristine();
+            $scope.transferForm.$setUntouched();
+        }
+
+        function submit(ev) {
+            $mdDialog.show({
+                controller: 'ReviewTransferDialogCtrl',
+                controllerAs: 'vm',
+                templateUrl: 'src/transfers/review-transfer-dialog/review-transfer-dialog.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                locals: {transferFormData: vm.transferFormData},
+                clickOutsideToClose: true
+            }).then(function (result) {
+                if(result === "success"){
+                    clearForm();
+                }
+            }, function () {
+                clearForm();
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Cancelled')
+                        .position('top right')
+                );
             });
         }
 
-        function onPaginate(offset, limit) {
-            getAccounts(angular.extend({}, vm.query, {offset: offset, limit: limit}));
-        }
 
-        function onReorder(order) {
-            getAccounts(angular.extend({}, vm.query, {order: order}));
-        }
-
-        function routeTo(accountType, id) {
-            var routingSlug = 'viewloanaccount';
-            if ('savings' == accountType) {
-                routingSlug = 'viewsavingsaccount';
-            } else if ('loan' == accountType) {
-                routingSlug = 'viewloanaccount';
-            } else {
-                routingSlug = 'viewshareaccount';
-            }
-            $state.go('app.'+routingSlug, {id: id});
-        }
     }
-
 })();
-
 (function () {
     'use strict';
     angular.module('selfService')
@@ -859,73 +926,6 @@
                     }
                 }
 
-            });
-        }
-
-        function clearForm() {
-            vm.transferFormData = getTransferFormDataObj();
-            $scope.transferForm.$setPristine();
-            $scope.transferForm.$setUntouched();
-        }
-
-        function submit(ev) {
-            $mdDialog.show({
-                controller: 'ReviewTransferDialogCtrl',
-                controllerAs: 'vm',
-                templateUrl: 'src/transfers/review-transfer-dialog/review-transfer-dialog.html',
-                parent: angular.element(document.body),
-                targetEvent: ev,
-                locals: {transferFormData: vm.transferFormData},
-                clickOutsideToClose: true
-            }).then(function (result) {
-                if(result === "success"){
-                    clearForm();
-                }
-            }, function () {
-                clearForm();
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Transfer Cancelled')
-                        .position('top right')
-                );
-            });
-        }
-
-
-    }
-})();
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .controller('TPTCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
-
-    function TPTCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
-
-        var vm = this;
-        vm.fromAccountOptions = [];
-        vm.toAccountOptions = [];
-        vm.transferFormData = getTransferFormDataObj()
-
-        vm.getTransferTemplate = getTransferTemplate();
-        vm.clearForm = clearForm;
-        vm.submit = submit;
-
-        // FORMAT THE DATE FOR THE DATEPICKER
-        $mdDateLocale.formatDate = function (date) {
-            return $filter('date')(date, "dd-MM-yyyy");
-        };
-
-        function getTransferFormDataObj() {
-            return {
-                transferDate: new Date()
-            };
-        }
-
-        function getTransferTemplate() {
-            AccountTransferService.getTransferTemplate().get({type: "tpt"},function (data) {
-                vm.fromAccountOptions = data.fromAccountOptions;
-                vm.toAccountOptions = data.toAccountOptions;
             });
         }
 
@@ -1497,32 +1497,6 @@
 
     }
 })();
-(function() {
-    'use strict';
-
-    angular.module('selfService')
-        .service('BeneficiariesService', ['$q', '$http', '$rootScope', '$state', '$resource', 'BASE_URL', BeneficiariesService]);
-
-    function BeneficiariesService($q, $http, $rootScope, $state, $resource, BASE_URL) {
-
-        this.getBeneficiaries = function () {
-            return $resource(BASE_URL + '/self/beneficiaries/tpt');
-        };
-
-        this.template = function() {
-            return $resource(BASE_URL + '/self/beneficiaries/tpt/template');
-        }
-
-        this.beneficiary = function () {
-            return $resource(BASE_URL + '/self/beneficiaries/tpt/:id',{id: '@id'},{
-                update: {
-                    method: 'PUT'
-                }
-            });
-        }
-    }
-
-})();
 (function(){
   'use strict';
 
@@ -1590,6 +1564,33 @@
             $state.go('login');
         }
 
+    }
+
+})();
+
+(function() {
+    'use strict';
+
+    angular.module('selfService')
+        .service('BeneficiariesService', ['$q', '$http', '$rootScope', '$state', '$resource', 'BASE_URL', BeneficiariesService]);
+
+    function BeneficiariesService($q, $http, $rootScope, $state, $resource, BASE_URL) {
+
+        this.getBeneficiaries = function () {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt');
+        };
+
+        this.template = function() {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt/template');
+        }
+
+        this.beneficiary = function () {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt/:id',{id: '@id'},{
+                update: {
+                    method: 'PUT'
+                }
+            });
+        }
     }
 
 })();
