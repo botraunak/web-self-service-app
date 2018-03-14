@@ -234,15 +234,12 @@ md-toolbar .md-menu {
 
 .logo {
   text-align: center;
-  margin-top: 2vh;
+  margin-top: 5vh;
 }
 
 @media (min-width: 960px) {
   .login-container {
     box-shadow: 1px 1px 80px black;
-  }
-  .login-container .translate-container {
-    padding: 0 16px;
   }
 }
 .login-form {
@@ -471,6 +468,14 @@ md-toolbar .md-menu {
 .loan-total-card {
   background: #f44336;
   color: white;
+}
+
+.auth-status {
+  margin-left: 15px;
+}
+
+.card-total {
+  word-wrap: break-word;
 }
 
 #forgot-password {

@@ -12,7 +12,7 @@
             $stateProvider
                 .state('app', {
                     abstract: true,
-                    templateUrl: 'src/common/main/main.html',
+                    templateUrl: 'src/common/main.html',
                     controller: 'MainCtrl',
                     controllerAs: 'vm',
                     data: {
