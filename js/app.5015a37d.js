@@ -70,6 +70,60 @@
 })();
 
 (function(){
+	'use strict';
+
+	angular.module('selfService')
+		.controller('ReviewBeneficiaryDialogCtrl', ['$scope', '$rootScope', '$state', '$stateParams', '$filter', '$mdDialog', '$mdToast', 'addBeneficiaryFormData', 'BeneficiariesService', ReviewBeneficiaryDialogCtrl])
+
+	function ReviewBeneficiaryDialogCtrl($scope, $rootScope, $state, $stateParams, $filter, $mdDialog, $mdToast, addBeneficiaryFormData, BeneficiariesService) {
+		
+		var vm = this;
+		vm.addBeneficiaryFormData = Object.assign({}, addBeneficiaryFormData);
+		vm.cancel = cancel;
+		vm.accountType = accountType;
+		vm.add = add;
+		
+		function cancel() {
+			$mdDialog.cancel();
+		}
+
+		function accountType(id) {
+					if (1 == id) {
+						return 'Loan Account';
+					} else {
+						return 'Savings Account';
+					}
+			}
+
+		function add() {
+			// Sending
+			BeneficiariesService.beneficiary().save(vm.addBeneficiaryFormData).$promise.then(function () {
+					$mdDialog.hide("success");
+					$mdToast.show(
+						$mdToast.simple()
+							.textContent('Beneficiary Added Successfully')
+							.position('top right')
+					);
+					vm.clearForm();
+			}, function (resp) {
+				var errors = '';
+				if (resp.data) {
+					errors = resp.data.errors.map(function (data) {
+						return data.defaultUserMessage;
+					});
+					errors.join(' ');
+				}
+				$mdToast.show(
+					$mdToast.simple()
+						.textContent('Error in Adding Beneficiary: ' + errors)
+						.position('top right')
+				);
+				$mdDialog.hide("error");
+			});
+		}
+	}
+})();
+(function(){
     'use strict';
 
     angular.module('selfService')
@@ -257,7 +311,6 @@
         RunReportService.reports().get({reportName: vm.reportName, id: vm.id}).$promise.then(function(data) {
             vm.reportData = data;
             vm.reportData.columnHeaders = data.columnHeaders;
-            console.log(vm.reportData.data[0].row);
         });
 
         function isDecimal (index) {
@@ -269,7 +322,7 @@
                 }
             }
             return false;
-        };
+        }
 
     }
 
@@ -350,206 +403,6 @@
 
 })();
 
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .controller('BeneficiariesListCtrl', ['$scope', '$rootScope', '$state', '$stateParams', '$mdDialog', '$mdToast', 'BeneficiariesService', BeneficiariesListCtrl]);
-
-    function BeneficiariesListCtrl($scope, $rootScope, $state, $stateParams, $mdDialog, $mdToast, BeneficiariesService) {
-
-        var vm = this;
-        vm.loadingBeneficiaries = true;
-        vm.beneficiaries = [];
-        vm.beneficiariesFilter = "";
-        vm.page = 1;
-        vm.query = {
-            limit: 5,
-            offset: 0
-        }
-
-        vm.getBeneficiaries = getBeneficiaries();
-        vm.addBeneficiary = addBeneficiary;
-        vm.goToEdit = goToEdit;
-        vm.deleteConfirm = deleteConfirm;
-
-        function getBeneficiaries() {
-            BeneficiariesService.getBeneficiaries().query().$promise.then(function(data) {
-                vm.beneficiaries = data;
-                vm.loadingBeneficiaries = false;
-            });
-        }
-
-        function addBeneficiary() {
-            $state.go('app.addbeneficiary');
-        }
-
-        function goToEdit(beneficiary) {
-            $state.go('app.editbeneficiary',{
-                id: beneficiary.id,
-                data: beneficiary
-            });
-        }
-
-        function deleteConfirm(ev, beneficiary) {
-            var confirm = $mdDialog.confirm()
-                .title('Are you sure you want to delete?')
-                .textContent('This beneficiary will be removed from your account')
-                .ariaLabel('Lucky day')
-                .targetEvent(ev)
-                .ok('Delete!')
-                .cancel('Cancel');
-
-            $mdDialog.show(confirm).then(function() {
-               BeneficiariesService.beneficiary().delete({
-                   id: beneficiary.id
-               }, function() {
-                   $mdToast.show(
-                       $mdToast.simple()
-                           .textContent('Beneficiary Deleted Successfully')
-                           .position('top right')
-                   );
-                   vm.beneficiaries = vm.beneficiaries.filter(function (benef) {
-                       return benef.id !== beneficiary.id
-                   });
-               });
-            }, function() {
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Error in Deleting Beneficiary')
-                        .position('top right')
-                );
-            });
-        }
-    }
-})();
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .controller('BeneficiariesEditCtrl', ['$scope', '$rootScope', '$state', '$stateParams', '$mdToast', 'BeneficiariesService', BeneficiariesEditCtrl]);
-
-    function BeneficiariesEditCtrl($scope, $rootScope, $state, $stateParams, $mdToast, BeneficiariesService) {
-
-        var vm = this;
-        vm.editBeneficiaryFormData = {
-            "locale": "en_GB"
-        };
-        vm.beneficiary = $stateParams.data;
-        vm.accountTypeOptions = [];
-        vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
-        vm.clearForm = clearForm;
-        vm.submit = submit;
-
-        function getBeneficiaryTemplate() {
-            BeneficiariesService.template().get().$promise.then(function (data) {
-                vm.accountTypeOptions = data.accountTypeOptions;
-            });
-
-            if(vm.beneficiary !== null) {
-                vm.editBeneficiaryFormData.accountType = vm.beneficiary.accountType.id;
-                vm.editBeneficiaryFormData.accountNumber = vm.beneficiary.accountNumber;
-                vm.editBeneficiaryFormData.officeName = vm.beneficiary.officeName;
-                vm.editBeneficiaryFormData.transferLimit = vm.beneficiary.transferLimit;
-                vm.editBeneficiaryFormData.name = vm.beneficiary.name;
-            }
-        }
-
-        function clearForm() {
-            vm.editBeneficiaryFormData = {
-                "locale": "en_GB"
-            };
-            $scope.editBeneficiaryForm.$setPristine();
-            $scope.addBeneficiaryForm.$setUntouched();
-        }
-
-        function submit() {
-            var data = {
-                name: vm.editBeneficiaryFormData.name,
-                transferLimit: vm.editBeneficiaryFormData.transferLimit
-            }
-
-            BeneficiariesService.beneficiary().update({id: vm.beneficiary.id}, data).$promise.then(function () {
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Beneficiary Updated Successfully')
-                        .position('top right')
-                );
-            }, function (resp) {
-                var errors = '';
-                if(resp.data){
-                    errors = resp.data.errors.map(function (data) {
-                        return data.defaultUserMessage;
-                    });
-                    errors.join(' ');
-                }
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Error in Adding Beneficiary: ' + errors)
-                        .position('top right')
-                );
-
-            });
-        }
-    }
-})();
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .controller('BeneficiariesAddCtrl', ['$scope', '$rootScope', '$state', '$stateParams', '$mdToast', 'BeneficiariesService', BeneficiariesAddCtrl]);
-
-    function BeneficiariesAddCtrl($scope, $rootScope, $state, $stateParams, $mdToast, BeneficiariesService) {
-
-        var vm = this;
-        vm.addBeneficiaryFormData = {
-            "locale": "en_GB"
-        };
-        vm.accountTypeOptions = [];
-        vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
-        vm.clearForm = clearForm;
-        vm.submit = submit;
-
-        function getBeneficiaryTemplate() {
-            BeneficiariesService.template().get().$promise.then(function (data) {
-                vm.accountTypeOptions = data.accountTypeOptions;
-            })
-        }
-
-        function clearForm() {
-            $scope.addBeneficiaryForm.$setPristine();
-            $scope.addBeneficiaryForm.$setUntouched();
-            vm.addBeneficiaryFormData = {
-                "locale": "en_GB"
-            };
-        }
-
-        function submit() {
-            BeneficiariesService.beneficiary().save(vm.addBeneficiaryFormData).$promise.then(function () {
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Beneficiary Added Successfully')
-                        .position('top right')
-                );
-                vm.clearForm();
-            }, function (resp) {
-                var errors = '';
-                if(resp.data){
-                    errors = resp.data.errors.map(function (data) {
-                        return data.defaultUserMessage;
-                    });
-                    errors.join(' ');
-                }
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Error in Adding Beneficiary: ' + errors)
-                        .position('top right')
-                );
-
-            });
-        }
-    }
-})();
 (function () {
     'use strict';
 
@@ -910,6 +763,7 @@
         vm.savingsAccounts = [];
         vm.shareAccounts = [];
         vm.loadingAccountInfo = true;
+        vm.tabIndex = sessionStorage.getItem("tab");
 
         vm.query = {
             limit: 5,
@@ -944,10 +798,13 @@
             var routingSlug = 'viewloanaccount';
             if ('savings' == accountType) {
                 routingSlug = 'viewsavingsaccount';
+                sessionStorage.setItem("tab", "1");
             } else if ('loan' == accountType) {
                 routingSlug = 'viewloanaccount';
+                sessionStorage.setItem("tab", "0");
             } else {
                 routingSlug = 'viewshareaccount';
+                sessionStorage.setItem("tab", "2");
             }
             $state.go('app.'+routingSlug, {id: id});
         }
@@ -959,67 +816,198 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('TPTCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
+        .controller('BeneficiariesAddCtrl', ['$scope', '$state', '$stateParams', '$filter', '$mdDialog', '$mdToast', 'BeneficiariesService', BeneficiariesAddCtrl]);
 
-    function TPTCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
+    function BeneficiariesAddCtrl($scope, $state, $stateParams, $filter, $mdDialog, $mdToast, BeneficiariesService) {
 
         var vm = this;
-        vm.fromAccountOptions = [];
-        vm.toAccountOptions = [];
-        vm.transferFormData = getTransferFormDataObj()
-
-        vm.getTransferTemplate = getTransferTemplate();
+        vm.addBeneficiaryFormData = {
+            "locale": "en_GB"
+        };
+        vm.accountTypeOptions = [];
+        vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
         vm.clearForm = clearForm;
         vm.submit = submit;
 
-        // FORMAT THE DATE FOR THE DATEPICKER
-        $mdDateLocale.formatDate = function (date) {
-            return $filter('date')(date, "dd-MM-yyyy");
-        };
-
-        function getTransferFormDataObj() {
-            return {
-                transferDate: new Date()
-            };
-        }
-
-        function getTransferTemplate() {
-            AccountTransferService.getTransferTemplate().get({type: "tpt"},function (data) {
-                vm.fromAccountOptions = data.fromAccountOptions;
-                vm.toAccountOptions = data.toAccountOptions;
-            });
+        function getBeneficiaryTemplate() {
+            BeneficiariesService.template().get().$promise.then(function (data) {
+                vm.accountTypeOptions = data.accountTypeOptions;
+            })
         }
 
         function clearForm() {
-            vm.transferFormData = getTransferFormDataObj();
-            $scope.transferForm.$setPristine();
-            $scope.transferForm.$setUntouched();
+            $scope.addBeneficiaryForm.$setPristine();
+            $scope.addBeneficiaryForm.$setUntouched();
+            vm.addBeneficiaryFormData = {
+                "locale": "en_GB"
+            };
         }
 
         function submit(ev) {
             $mdDialog.show({
-                controller: 'ReviewTransferDialogCtrl',
+                controller: 'ReviewBeneficiaryDialogCtrl',
                 controllerAs: 'vm',
-                templateUrl: 'src/transfers/review-transfer-dialog/review-transfer-dialog.html',
+                templateUrl: 'src/beneficiaries/beneficiaries-add/review-beneficiary-dialog/review-beneficiary-dialog.html',
                 parent: angular.element(document.body),
                 targetEvent: ev,
-                locals: {transferFormData: vm.transferFormData},
+                locals: {addBeneficiaryFormData: vm.addBeneficiaryFormData},
                 clickOutsideToClose: true
             }).then(function (result) {
-                if(result === "success"){
+                if (result === "success"){
                     clearForm();
                 }
-            }, function () {
+            }, function() {
                 clearForm();
                 $mdToast.show(
                     $mdToast.simple()
-                        .textContent('Transfer Cancelled')
+                        .textContent('Add Beneficiary Cancelled')
                         .position('top right')
                 );
             });
         }
+    }
+})();
+(function () {
+    'use strict';
 
+    angular.module('selfService')
+        .controller('BeneficiariesListCtrl', ['$scope', '$rootScope', '$state', '$stateParams', '$mdDialog', '$mdToast', 'BeneficiariesService', BeneficiariesListCtrl]);
 
+    function BeneficiariesListCtrl($scope, $rootScope, $state, $stateParams, $mdDialog, $mdToast, BeneficiariesService) {
+
+        var vm = this;
+        vm.loadingBeneficiaries = true;
+        vm.beneficiaries = [];
+        vm.beneficiariesFilter = "";
+        vm.page = 1;
+        vm.query = {
+            limit: 5,
+            offset: 0
+        }
+
+        vm.getBeneficiaries = getBeneficiaries();
+        vm.addBeneficiary = addBeneficiary;
+        vm.goToEdit = goToEdit;
+        vm.deleteConfirm = deleteConfirm;
+
+        function getBeneficiaries() {
+            BeneficiariesService.getBeneficiaries().query().$promise.then(function(data) {
+                vm.beneficiaries = data;
+                vm.loadingBeneficiaries = false;
+            });
+        }
+
+        function addBeneficiary() {
+            $state.go('app.addbeneficiary');
+        }
+
+        function goToEdit(beneficiary) {
+            $state.go('app.editbeneficiary',{
+                id: beneficiary.id,
+                data: beneficiary
+            });
+        }
+
+        function deleteConfirm(ev, beneficiary) {
+            var confirm = $mdDialog.confirm()
+                .title('Are you sure you want to delete?')
+                .textContent('This beneficiary will be removed from your account')
+                .ariaLabel('Lucky day')
+                .targetEvent(ev)
+                .ok('Delete!')
+                .cancel('Cancel');
+
+            $mdDialog.show(confirm).then(function() {
+               BeneficiariesService.beneficiary().delete({
+                   id: beneficiary.id
+               }, function() {
+                   $mdToast.show(
+                       $mdToast.simple()
+                           .textContent('Beneficiary Deleted Successfully')
+                           .position('top right')
+                   );
+                   vm.beneficiaries = vm.beneficiaries.filter(function (benef) {
+                       return benef.id !== beneficiary.id
+                   });
+               });
+            }, function() {
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Deleting Beneficiary')
+                        .position('top right')
+                );
+            });
+        }
+    }
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('BeneficiariesEditCtrl', ['$scope', '$rootScope', '$state', '$stateParams', '$mdToast', 'BeneficiariesService', BeneficiariesEditCtrl]);
+
+    function BeneficiariesEditCtrl($scope, $rootScope, $state, $stateParams, $mdToast, BeneficiariesService) {
+
+        var vm = this;
+        vm.editBeneficiaryFormData = {
+            "locale": "en_GB"
+        };
+        vm.beneficiary = $stateParams.data;
+        vm.accountTypeOptions = [];
+        vm.getBeneficiaryTemplate = getBeneficiaryTemplate();
+        vm.clearForm = clearForm;
+        vm.submit = submit;
+
+        function getBeneficiaryTemplate() {
+            BeneficiariesService.template().get().$promise.then(function (data) {
+                vm.accountTypeOptions = data.accountTypeOptions;
+            });
+
+            if(vm.beneficiary !== null) {
+                vm.editBeneficiaryFormData.accountType = vm.beneficiary.accountType.id;
+                vm.editBeneficiaryFormData.accountNumber = vm.beneficiary.accountNumber;
+                vm.editBeneficiaryFormData.officeName = vm.beneficiary.officeName;
+                vm.editBeneficiaryFormData.transferLimit = vm.beneficiary.transferLimit;
+                vm.editBeneficiaryFormData.name = vm.beneficiary.name;
+            }
+        }
+
+        function clearForm() {
+            vm.editBeneficiaryFormData = {
+                "locale": "en_GB"
+            };
+            $scope.editBeneficiaryForm.$setPristine();
+            $scope.addBeneficiaryForm.$setUntouched();
+        }
+
+        function submit() {
+            var data = {
+                name: vm.editBeneficiaryFormData.name,
+                transferLimit: vm.editBeneficiaryFormData.transferLimit
+            }
+
+            BeneficiariesService.beneficiary().update({id: vm.beneficiary.id}, data).$promise.then(function () {
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Beneficiary Updated Successfully')
+                        .position('top right')
+                );
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Adding Beneficiary: ' + errors)
+                        .position('top right')
+                );
+
+            });
+        }
     }
 })();
 (function () {
@@ -1141,6 +1129,167 @@
 })();
 (function () {
     'use strict';
+
+    angular.module('selfService')
+        .controller('TPTCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
+
+    function TPTCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
+
+        var vm = this;
+        vm.fromAccountOptions = [];
+        vm.toAccountOptions = [];
+        vm.transferFormData = getTransferFormDataObj()
+
+        vm.getTransferTemplate = getTransferTemplate();
+        vm.clearForm = clearForm;
+        vm.submit = submit;
+
+        // FORMAT THE DATE FOR THE DATEPICKER
+        $mdDateLocale.formatDate = function (date) {
+            return $filter('date')(date, "dd-MM-yyyy");
+        };
+
+        function getTransferFormDataObj() {
+            return {
+                transferDate: new Date()
+            };
+        }
+
+        function getTransferTemplate() {
+            AccountTransferService.getTransferTemplate().get({type: "tpt"},function (data) {
+                vm.fromAccountOptions = data.fromAccountOptions;
+                vm.toAccountOptions = data.toAccountOptions;
+            });
+        }
+
+        function clearForm() {
+            vm.transferFormData = getTransferFormDataObj();
+            $scope.transferForm.$setPristine();
+            $scope.transferForm.$setUntouched();
+        }
+
+        function submit(ev) {
+            $mdDialog.show({
+                controller: 'ReviewTPTDialogCtrl',
+                controllerAs: 'vm',
+                templateUrl: 'src/tpt/review-tpt-dialog/review-tpt-dialog.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                locals: {transferFormData: vm.transferFormData},
+                clickOutsideToClose: true
+            }).then(function (result) {
+                if(result === "success"){
+                    clearForm();
+                }
+            }, function () {
+                clearForm();
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Cancelled')
+                        .position('top right')
+                );
+            });
+        }
+
+
+    }
+})();
+(function() {
+    'use strict';
+
+    angular.module('selfService')
+        .service('SharesApplicationService', ['$resource', 'BASE_URL', SharesApplicationService]);
+
+    /**
+     * @module SharesApplicationService
+     * @description
+     * Service required for Shares Application
+     */
+    function SharesApplicationService() {
+
+
+    }
+
+})();
+(function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('SharesApplicationCtrl', ['$scope', '$filter', '$mdToast', 'AccountService', 'SharesApplicationService', SharesApplicationCtrl]);
+
+    /**
+     * @module SharesApplicationCtrl
+     * @description
+     * Controls Application for Shares
+     */
+    function SharesApplicationCtrl($scope) {
+        var vm = this;
+
+        vm.clearForm = clearForm;
+        vm.submit = submit;
+        vm.form = {};
+
+        function clearForm() {
+            $scope.shareApplicationForm.$setPristine();
+            $scope.shareApplicationForm.$setUntouched();
+            vm.form = {};
+        }
+
+        function submit() {
+
+        }
+
+    }
+})();
+(function() {
+    'use strict';
+
+    angular.module('selfService')
+        .service('SavingsApplicationService', ['$resource', 'BASE_URL', SavingsApplicationService]);
+
+    /**
+     * @module SavingsApplicationService
+     * @description
+     * Service required for Savings Application
+     */
+    function SavingsApplicationService() {
+
+
+    }
+
+})();
+(function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('SavingsApplicationCtrl', ['$scope', '$filter', '$mdToast', 'AccountService', 'SavingsApplicationService', SavingsApplicationCtrl]);
+
+    /**
+     * @module SavingsApplicationCtrl
+     * @description
+     * Controls Application for Savings
+     */
+    function SavingsApplicationCtrl($scope) {
+        var vm = this;
+        vm.form = {};
+
+        vm.clearForm = clearForm;
+        vm.submit = submit;
+        vm.form = {};
+
+        function clearForm() {
+            $scope.savingsApplicationForm.$setPristine();
+            $scope.savingsApplicationForm.$setUntouched();
+            vm.form = {};
+        }
+
+        function submit() {
+
+        }
+    }
+})();
+(function () {
+    'use strict';
     angular.module('selfService')
         .service('TransactionService', ['$q', '$http', '$rootScope', '$resource', 'BASE_URL', TransactionService]);
 
@@ -1189,6 +1338,249 @@
 
     }
 })();
+(function(){
+  'use strict';
+
+  angular.module('selfService')
+    .service('storageService', ['$q', storageService]);
+
+  function storageService($q){
+
+    return {
+        getItem: function (key) {
+            return $q.when(window.localStorage.getItem(key));
+        },
+        setItem: function (key, value) {
+            window.localStorage.setItem(key, value);
+        },
+        getObject: function (key) {
+            return $q.when(JSON.parse(window.localStorage.getItem(key)));
+        },
+        setObject: function (key, value) {
+            value = JSON.stringify(value);
+            window.localStorage.setItem(key, value);
+        },
+        clear: function () {
+            window.localStorage.clear();
+        }
+    };
+  }
+
+})();
+(function(){
+  'use strict';
+
+  angular.module('selfService')
+    .service('navService', ['$q', navService]);
+
+  function navService($q){
+    var menuItems = [
+      {
+        name: 'Dashboard',
+        icon: 'view_module',
+        sref: '.dashboard'
+      },
+      {
+        name: 'Accounts',
+        icon: 'account_balance_wallet',
+        sref: '.clients'
+      }
+    ];
+
+    return {
+      loadAllItems : function() {
+        return $q.when(menuItems);
+      }
+    };
+  }
+
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .filter('DateFormat', function (dateFilter) {
+            return function (input) {
+                if (input) {
+                    var tDate = new Date(input);
+                    return dateFilter(tDate, 'dd MMMM yyyy');//@todo Add this format to localstorage
+                }
+                return '';
+            };
+        })
+        .filter('StatusLookup', function () {
+            return function (input) {
+                var cssClassNameLookup = {
+                    "true": "statusactive",
+                    "false": "statusdeleted",
+                    "Active": "statusactive",
+                    "loanStatusType.submitted.and.pending.approval": "statuspending",
+                    "loanStatusType.approved": "statusApproved",
+                    "loanStatusType.active": "statusactive",
+                    "loanStatusType.overpaid": "statusoverpaid",
+                    "savingsAccountStatusType.submitted.and.pending.approval": "statuspending",
+                    "savingsAccountStatusType.approved": "statusApproved",
+                    "savingsAccountStatusType.active": "statusactive",
+                    "savingsAccountStatusType.activeInactive": "statusactiveoverdue",
+                    "savingsAccountStatusType.activeDormant": "statusactiveoverdue",
+                    "savingsAccountStatusType.matured": "statusmatured",
+                    "loanProduct.active": "statusactive",
+                    "clientStatusType.pending": "statuspending",
+                    "clientStatusType.closed":"statusclosed",
+                    "clientStatusType.rejected":"statusrejected",
+                    "clientStatusType.withdraw":"statuswithdraw",
+                    "clientStatusType.active": "statusactive",
+                    "clientStatusType.submitted.and.pending.approval": "statuspending",
+                    "clientStatusTYpe.approved": "statusApproved",
+                    "clientStatusType.transfer.in.progress": "statustransferprogress",
+                    "clientStatusType.transfer.on.hold": "statustransferonhold",
+                    "groupingStatusType.active": "statusactive",
+                    "groupingStatusType.pending": "statuspending",
+                    "groupingStatusType.submitted.and.pending.approval": "statuspending",
+                    "groupingStatusType.approved": "statusApproved",
+                    "shareAccountStatusType.submitted.and.pending.approval": "statuspending",
+                    "shareAccountStatusType.approved": "statusApproved",
+                    "shareAccountStatusType.active": "statusactive",
+                    "shareAccountStatusType.rejected": "statusrejected",
+                    "purchasedSharesStatusType.applied": "statuspending",
+                    "purchasedSharesStatusType.approved": "statusApproved",
+                    "purchasedSharesStatusType.rejected": "statusrejected"
+                }
+
+                return cssClassNameLookup[input];
+            }
+        })
+
+})();		
+
+
+(function () {
+
+    angular.module('selfService')
+        .controller('MainCtrl', ['navService', '$mdSidenav', '$mdBottomSheet', '$log', '$q', '$state', '$mdToast', '$scope', 'AuthService', 'AccountService', MainCtrl]);
+
+    function MainCtrl(navService, $mdSidenav, $mdBottomSheet, $log, $q, $state, $mdToast, $scope, AuthService, AccountService) {
+        var vm = this;
+
+        vm.menuItems = [];
+        vm.profileImage = null;
+
+        vm.selectItem = selectItem;
+        vm.toggleItemsList = toggleItemsList;
+        vm.toggleRightSidebar = toggleRightSidebar;
+        vm.logout = logout;
+
+        vm.profile = getUserData();
+
+
+        navService.loadAllItems().then(function (menuItems) {
+            vm.menuItems = [].concat(menuItems);
+        });
+
+        function toggleRightSidebar() {
+            $mdSidenav('right').toggle();
+        }
+
+        function toggleItemsList() {
+            var pending = $mdBottomSheet.hide() || $q.when(true);
+
+            pending.then(function () {
+                $mdSidenav('left').toggle();
+            });
+        }
+
+        function selectItem(itemName) {
+            vm.title = itemName;
+            vm.toggleItemsList();
+        }
+
+        function getUserData() {
+            AccountService.getClientId().then(function (clientId) {
+                vm.clientId = clientId;
+                getClient(clientId);
+                getClientImage(clientId);
+            });
+        }
+
+        function getClient(clientId) {
+            AccountService.getClient(clientId).get().$promise.then( function (data) {
+                vm.profile = data;
+            })
+        }
+
+        function getClientImage(clientId) {
+            AccountService.getClientImage(clientId).then( function (resp) {
+                vm.profileImage = resp.data;
+            }).catch(function() {
+                // Not Found Profile image
+                vm.profileImage = null;
+            });
+        }
+
+        function logout() {
+            AuthService.logout();
+        }
+
+    }
+
+})();
+
+(function () {
+    'use strict';
+    //@todo Move this service to the common folder
+    angular.module('selfService')
+        .service('AccountService', ['$http', '$resource', 'BASE_URL', 'storageService', AccountService]);
+
+    function AccountService($http, $resource, BASE_URL, storageService) {
+
+        /**
+         * Get the clients associated with the current user's account.
+         *
+         */
+        this.getClients = function () {
+            return $resource(BASE_URL + '/self/clients/');
+        };
+
+        this.getAllAccounts = function (clientId) {//@todo rename this getClientAccounts
+            //@todo update this to return $resource(BASE_URL+'/self/clients/'+id+'/accounts'); and test
+            return $resource(BASE_URL + '/self/clients/' + clientId + '/accounts');
+        };
+
+        this.getClient = function (id) {
+            return $resource(BASE_URL + '/self/clients/' + id);
+        }
+
+        this.getClientImage = function (id) {
+            return $http({
+                method: 'GET',
+                url: BASE_URL + '/self/clients/' + id + '/images'
+            });
+        }
+
+        this.getClientCharges = function (id) {
+            return $resource(BASE_URL + '/self/clients/' + id + '/charges?pendingPayment=true');
+        }
+
+        this.getClientAccounts = function (id) {
+            return $resource(BASE_URL + '/self/clients/' + id + '/accounts');
+        }
+
+        this.getLoanAccount = function (id) {
+            return $resource(BASE_URL + '/self/loans/' + id);
+        }
+
+        this.setClientId = function (id) {
+            storageService.setObject('client_id', id);
+        }
+
+        this.getClientId = function () {
+            return storageService.getItem('client_id');
+        }
+
+    }
+
+})();
+
 (function () {
     'use strict';
 
@@ -1546,328 +1938,11 @@
 
         }
 
+
+
     }
 })();
 
-(function(){
-  'use strict';
-
-  angular.module('selfService')
-    .service('storageService', ['$q', storageService]);
-
-  function storageService($q){
-
-    return {
-        getItem: function (key) {
-            return $q.when(window.localStorage.getItem(key));
-        },
-        setItem: function (key, value) {
-            window.localStorage.setItem(key, value);
-        },
-        getObject: function (key) {
-            return $q.when(JSON.parse(window.localStorage.getItem(key)));
-        },
-        setObject: function (key, value) {
-            value = JSON.stringify(value);
-            window.localStorage.setItem(key, value);
-        },
-        clear: function () {
-            window.localStorage.clear();
-        }
-    };
-  }
-
-})();
-(function(){
-  'use strict';
-
-  angular.module('selfService')
-    .service('navService', ['$q', navService]);
-
-  function navService($q){
-    var menuItems = [
-      {
-        name: 'Dashboard',
-        icon: 'view_module',
-        sref: '.dashboard'
-      },
-      {
-        name: 'Accounts',
-        icon: 'account_balance_wallet',
-        sref: '.clients'
-      }
-    ];
-
-    return {
-      loadAllItems : function() {
-        return $q.when(menuItems);
-      }
-    };
-  }
-
-})();
-(function () {
-    'use strict';
-
-    angular.module('selfService')
-        .filter('DateFormat', function (dateFilter) {
-            return function (input) {
-                if (input) {
-                    var tDate = new Date(input);
-                    return dateFilter(tDate, 'dd MMMM yyyy');//@todo Add this format to localstorage
-                }
-                return '';
-            };
-        })
-        .filter('StatusLookup', function () {
-            return function (input) {
-                var cssClassNameLookup = {
-                    "true": "statusactive",
-                    "false": "statusdeleted",
-                    "Active": "statusactive",
-                    "loanStatusType.submitted.and.pending.approval": "statuspending",
-                    "loanStatusType.approved": "statusApproved",
-                    "loanStatusType.active": "statusactive",
-                    "loanStatusType.overpaid": "statusoverpaid",
-                    "savingsAccountStatusType.submitted.and.pending.approval": "statuspending",
-                    "savingsAccountStatusType.approved": "statusApproved",
-                    "savingsAccountStatusType.active": "statusactive",
-                    "savingsAccountStatusType.activeInactive": "statusactiveoverdue",
-                    "savingsAccountStatusType.activeDormant": "statusactiveoverdue",
-                    "savingsAccountStatusType.matured": "statusmatured",
-                    "loanProduct.active": "statusactive",
-                    "clientStatusType.pending": "statuspending",
-                    "clientStatusType.closed":"statusclosed",
-                    "clientStatusType.rejected":"statusrejected",
-                    "clientStatusType.withdraw":"statuswithdraw",
-                    "clientStatusType.active": "statusactive",
-                    "clientStatusType.submitted.and.pending.approval": "statuspending",
-                    "clientStatusTYpe.approved": "statusApproved",
-                    "clientStatusType.transfer.in.progress": "statustransferprogress",
-                    "clientStatusType.transfer.on.hold": "statustransferonhold",
-                    "groupingStatusType.active": "statusactive",
-                    "groupingStatusType.pending": "statuspending",
-                    "groupingStatusType.submitted.and.pending.approval": "statuspending",
-                    "groupingStatusType.approved": "statusApproved",
-                    "shareAccountStatusType.submitted.and.pending.approval": "statuspending",
-                    "shareAccountStatusType.approved": "statusApproved",
-                    "shareAccountStatusType.active": "statusactive",
-                    "shareAccountStatusType.rejected": "statusrejected",
-                    "purchasedSharesStatusType.applied": "statuspending",
-                    "purchasedSharesStatusType.approved": "statusApproved",
-                    "purchasedSharesStatusType.rejected": "statusrejected"
-                }
-
-                return cssClassNameLookup[input];
-            }
-        })
-
-})();		
-
-
-(function () {
-
-    angular.module('selfService')
-        .controller('MainCtrl', ['navService', '$mdSidenav', '$mdBottomSheet', '$log', '$q', '$state', '$mdToast', '$scope', 'AuthService', 'AccountService', MainCtrl]);
-
-    function MainCtrl(navService, $mdSidenav, $mdBottomSheet, $log, $q, $state, $mdToast, $scope, AuthService, AccountService) {
-        var vm = this;
-
-        vm.menuItems = [];
-        vm.profileImage = null;
-
-        vm.selectItem = selectItem;
-        vm.toggleItemsList = toggleItemsList;
-        vm.toggleRightSidebar = toggleRightSidebar;
-        vm.logout = logout;
-
-        vm.profile = getUserData();
-
-
-        navService.loadAllItems().then(function (menuItems) {
-            vm.menuItems = [].concat(menuItems);
-        });
-
-        function toggleRightSidebar() {
-            $mdSidenav('right').toggle();
-        }
-
-        function toggleItemsList() {
-            var pending = $mdBottomSheet.hide() || $q.when(true);
-
-            pending.then(function () {
-                $mdSidenav('left').toggle();
-            });
-        }
-
-        function selectItem(itemName) {
-            vm.title = itemName;
-            vm.toggleItemsList();
-        }
-
-        function getUserData() {
-            AccountService.getClientId().then(function (clientId) {
-                vm.clientId = clientId;
-                getClient(clientId);
-                getClientImage(clientId);
-            });
-        }
-
-        function getClient(clientId) {
-            AccountService.getClient(clientId).get().$promise.then( function (data) {
-                vm.profile = data;
-            })
-        }
-
-        function getClientImage(clientId) {
-            AccountService.getClientImage(clientId).then( function (resp) {
-                vm.profileImage = resp.data;
-            }).catch(function() {
-                // Not Found Profile image
-                vm.profileImage = null;
-            });
-        }
-
-        function logout() {
-            AuthService.logout();
-        }
-
-    }
-
-})();
-
-(function () {
-    'use strict';
-    //@todo Move this service to the common folder
-    angular.module('selfService')
-        .service('AccountService', ['$http', '$resource', 'BASE_URL', 'storageService', AccountService]);
-
-    function AccountService($http, $resource, BASE_URL, storageService) {
-
-        /**
-         * Get the clients associated with the current user's account.
-         *
-         */
-        this.getClients = function () {
-            return $resource(BASE_URL + '/self/clients/');
-        };
-
-        this.getAllAccounts = function (clientId) {//@todo rename this getClientAccounts
-            //@todo update this to return $resource(BASE_URL+'/self/clients/'+id+'/accounts'); and test
-            return $resource(BASE_URL + '/self/clients/' + clientId + '/accounts');
-        };
-
-        this.getClient = function (id) {
-            return $resource(BASE_URL + '/self/clients/' + id);
-        }
-
-        this.getClientImage = function (id) {
-            return $http({
-                method: 'GET',
-                url: BASE_URL + '/self/clients/' + id + '/images'
-            });
-        }
-
-        this.getClientCharges = function (id) {
-            return $resource(BASE_URL + '/self/clients/' + id + '/charges?pendingPayment=true');
-        }
-
-        this.getClientAccounts = function (id) {
-            return $resource(BASE_URL + '/self/clients/' + id + '/accounts');
-        }
-
-        this.getLoanAccount = function (id) {
-            return $resource(BASE_URL + '/self/loans/' + id);
-        }
-
-        this.setClientId = function (id) {
-            storageService.setObject('client_id', id);
-        }
-
-        this.getClientId = function () {
-            return storageService.getItem('client_id');
-        }
-
-    }
-
-})();
-
-(function () {
-    'use strict';
-    angular.module('selfService')
-        .service('ChargesService', ['$q', '$http', '$rootScope', '$resource', 'BASE_URL', ChargesService]);
-
-    function ChargesService($q, $http, $rootScope, $resource, BASE_URL) {
-
-        this.getClientCharges = function (clientId) {
-            return $resource(BASE_URL + '/self/clients/' + clientId + '/charges')
-        }
-
-    }
-
-})();
-
-(function(){
-    'use strict';
-
-    angular.module('selfService')
-        .controller('ChargesCtrl', ['$scope', '$rootScope', '$stateParams', 'AccountService', 'ChargesService', ChargesCtrl]);
-
-    function ChargesCtrl($scope, $rootScope, $stateParams, AccountService, ChargesService) {
-
-        var vm = this;
-        vm.loadingCharges = true;
-        vm.charges = {};
-        vm.onPaginate = onPaginate;
-        vm.page = 1;
-        vm.query = {
-            limit: 5,
-            offset: 0
-        }
-
-        vm.getCharges = getCharges(vm.query);
-
-        function getCharges(query){
-            AccountService.getClientId().then(function (clientId){
-                ChargesService.getClientCharges(clientId).get(query).$promise.then(function (res) {
-                    vm.loadingCharges = false;
-                    vm.charges = res;
-                });
-            });
-        }
-
-        function onPaginate(offset,limit) {
-            getCharges(angular.extend({}, vm.query, {offset: (offset - 1) * limit, limit: limit}));
-        }
-
-    }
-})();
-(function() {
-    'use strict';
-
-    angular.module('selfService')
-        .service('BeneficiariesService', ['$q', '$http', '$rootScope', '$state', '$resource', 'BASE_URL', BeneficiariesService]);
-
-    function BeneficiariesService($q, $http, $rootScope, $state, $resource, BASE_URL) {
-
-        this.getBeneficiaries = function () {
-            return $resource(BASE_URL + '/self/beneficiaries/tpt');
-        };
-
-        this.template = function() {
-            return $resource(BASE_URL + '/self/beneficiaries/tpt/template');
-        }
-
-        this.beneficiary = function () {
-            return $resource(BASE_URL + '/self/beneficiaries/tpt/:id',{id: '@id'},{
-                update: {
-                    method: 'PUT'
-                }
-            });
-        }
-    }
-
-})();
 (function(){
   'use strict';
 
@@ -1945,4 +2020,113 @@
 
     }
 
+})();
+
+(function() {
+    'use strict';
+
+    angular.module('selfService')
+        .service('BeneficiariesService', ['$q', '$http', '$rootScope', '$state', '$resource', 'BASE_URL', BeneficiariesService]);
+
+    function BeneficiariesService($q, $http, $rootScope, $state, $resource, BASE_URL) {
+
+        this.getBeneficiaries = function () {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt');
+        };
+
+        this.template = function() {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt/template');
+        }
+
+        this.beneficiary = function () {
+            return $resource(BASE_URL + '/self/beneficiaries/tpt/:id',{id: '@id'},{
+                update: {
+                    method: 'PUT'
+                }
+            });
+        }
+    }
+
+})();
+(function () {
+    'use strict';
+    angular.module('selfService')
+        .service('ChargesService', ['$q', '$http', '$rootScope', '$resource', 'BASE_URL', ChargesService]);
+
+    function ChargesService($q, $http, $rootScope, $resource, BASE_URL) {
+
+        this.getClientCharges = function (clientId) {
+            return $resource(BASE_URL + '/self/clients/' + clientId + '/charges')
+        }
+
+    }
+
+})();
+
+(function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('ChargesCtrl', ['$scope', '$rootScope', '$stateParams', 'AccountService', 'ChargesService', ChargesCtrl]);
+
+    function ChargesCtrl($scope, $rootScope, $stateParams, AccountService, ChargesService) {
+
+        var vm = this;
+        vm.loadingCharges = true;
+        vm.charges = {};
+        vm.onPaginate = onPaginate;
+        vm.page = 1;
+        vm.query = {
+            limit: 5,
+            offset: 0
+        }
+
+        vm.getCharges = getCharges(vm.query);
+
+        function getCharges(query){
+            AccountService.getClientId().then(function (clientId){
+                ChargesService.getClientCharges(clientId).get(query).$promise.then(function (res) {
+                    vm.loadingCharges = false;
+                    vm.charges = res;
+                });
+            });
+        }
+
+        function onPaginate(offset,limit) {
+            getCharges(angular.extend({}, vm.query, {offset: (offset - 1) * limit, limit: limit}));
+        }
+
+    }
+})();
+(function (){
+    'use strict';
+
+    angular.module('selfService')
+        .service('AboutUsService', ['$q', '$http', '$rootScope', '$state', '$resource', AboutUsService]);
+
+    function AboutUsService($q,$http,$rootScope,$state,$resource){
+
+        this.getOrgDetails = function () {
+            return $resource(''); // enter the URL of the organisations details.
+        };
+    }
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('AboutUsCtrl', ['$scope', '$rootScope', '$state', '$stateParams', 'AboutUsService', AboutUsCtrl]);
+
+    function AboutUsCtrl ($scope, $rootScope, $state, $stateParams, AboutUsService) {
+
+        var vm=this;
+        vm.org = null; // it is an array, when data is available then vm.org = {JSON data};
+        vm.getDetails = getDetails;
+
+        function getDetails() {
+            AboutUsService.getOrgDetails.get().$promise.then(function (data){
+                vm.org =data;
+            })
+        }
+    }
 })();

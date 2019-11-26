@@ -85,8 +85,8 @@
                 })
                 .state('app.aboutus', {
                     url: '/about',
-                    templateUrl: 'src/common/coming-soon.html',
-                    controller: 'ClientCtrl',
+                    templateUrl: 'src/aboutUs/aboutUs.html',
+                    controller: 'AboutUsCtrl',
                     controllerAs: 'vm',
                     data: {
                         title: 'About Us',
@@ -194,6 +194,18 @@
                     },
                     templateUrl: 'src/reports/run_reports/run_reports.html',
                     controller: 'RunReportCtrl',
+                    controllerAs: 'vm'
+                })
+                .state('app.applysavings', {
+                    url: '/savings/apply',
+                    templateUrl: 'src/savings-application/savings-application.html',
+                    controller: 'SavingsApplicationCtrl',
+                    controllerAs: 'vm'
+                })
+
+                .state('app.applyshares', {
+                    url: '/shares/apply',
+                    templateUrl: 'src/shares-application/shares-application.html',
                     controllerAs: 'vm'
                 })
                 .state('login', {
