@@ -217,6 +217,11 @@ md-toolbar .md-menu {
   margin-bottom: 0px;
 }
 
+.sidenav-icon {
+  text-align: left;
+  display: block;
+}
+
 .cover {
   background: url("../assets/images/cover.png");
   background-size: cover;
@@ -235,6 +240,24 @@ md-toolbar .md-menu {
 .logo {
   text-align: center;
   margin-top: 5vh;
+}
+
+.org-logo-height {
+  height: 300px;
+}
+
+.org-name {
+  padding-top: 80px;
+  padding-left: 10px;
+}
+
+.org-descripion {
+  padding-top: 20px;
+}
+
+.org-description-contents {
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 @media (min-width: 960px) {
@@ -609,6 +632,22 @@ md-toolbar .md-menu {
     width: 90%;
   }
 }
+.report-table {
+  width: 1200px;
+  white-space: nowrap;
+}
+
+.report-row {
+  padding-left: 10px;
+}
+.report-row .mobile-table-title {
+  padding-left: 7px;
+}
+
+.md-button.md-fab.md-fab-bottom-right {
+  position: fixed;
+}
+
 .table {
   border-spacing: 0;
   width: 100%;

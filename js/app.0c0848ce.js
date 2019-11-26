@@ -20,50 +20,33 @@
     }
 
 })();
-(function(){
+(function () {
     'use strict';
 
     angular.module('selfService')
-        .controller('ReviewTransferDialogCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTransferDialogCtrl]);
+        .controller('VerificationCtrl', ['$scope', '$state', '$mdToast', 'AuthService', '$location',  VerificationCtrl]);
 
-    function ReviewTransferDialogCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
 
+    function VerificationCtrl($scope, $state, $mdToast, AuthService, $location) {
         var vm = this;
-        vm.transferFormData = Object.assign({}, transferFormData);
-        vm.cancel = cancel;
-        vm.transfer = transfer;
+        vm.verifyData = {};
 
-        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
+      /*  function clearForm() {
+            $scope.form.$setPristine();
+            $scope.form.$setUntouched();
+            vm.verifyData={};
 
-        function cancel() {
-            $mdDialog.cancel();
-        }
+        }*/
 
-        function transfer() {
-            // Transforming Request Data
-            var transferData = {
-                fromOfficeId: vm.transferFormData.fromAccount.officeId,
-                fromClientId: vm.transferFormData.fromAccount.clientId,
-                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
-                fromAccountId: vm.transferFormData.fromAccount.accountId,
-                toOfficeId: vm.transferFormData.toAccount.officeId,
-                toClientId: vm.transferFormData.toAccount.clientId,
-                toAccountType: vm.transferFormData.toAccount.accountType.id,
-                toAccountId: vm.transferFormData.toAccount.accountId,
-                dateFormat: "dd MMMM yyyy",
-                locale: "en",
-                transferDate: vm.transferFormData.transferDate,
-                transferAmount: "" + vm.transferFormData.amount,
-                transferDescription: vm.transferFormData.remark
-            }
-            // Sending
-            AccountTransferService.transfer().save(transferData).$promise.then(function () {
-               $mdDialog.hide("success");
+        $scope.submit = function() {
+            AuthService.verifyUser(vm.verifyData).then(function () {
                 $mdToast.show(
                     $mdToast.simple()
-                        .textContent('Transfer Completed Successfully')
+                        .textContent('User has been successfully registered')
                         .position('top right')
                 );
+                $location.path('/login');
+                vm.clearForm();
             }, function (resp) {
                 var errors = '';
                 if(resp.data){
@@ -74,16 +57,18 @@
                 }
                 $mdToast.show(
                     $mdToast.simple()
-                        .textContent('Error in Completing Transfer: ' + errors)
+                        .textContent('Error in creating user: ' + errors)
                         .position('top right')
                 );
-                $mdDialog.hide("error");
 
             });
 
         }
+
     }
+
 })();
+
 (function(){
     'use strict';
 
@@ -148,6 +133,148 @@
         }
     }
 })();
+(function(){
+    'use strict';
+
+    angular.module('selfService')
+        .controller('ReviewTransferDialogCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdToast', 'transferFormData', 'AccountTransferService', ReviewTransferDialogCtrl]);
+
+    function ReviewTransferDialogCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdToast, transferFormData, AccountTransferService) {
+
+        var vm = this;
+        vm.transferFormData = Object.assign({}, transferFormData);
+        vm.cancel = cancel;
+        vm.transfer = transfer;
+
+        vm.transferFormData.transferDate = $filter('DateFormat')(transferFormData.transferDate);
+
+        function cancel() {
+            $mdDialog.cancel();
+        }
+
+        function transfer() {
+            // Transforming Request Data
+            var transferData = {
+                fromOfficeId: vm.transferFormData.fromAccount.officeId,
+                fromClientId: vm.transferFormData.fromAccount.clientId,
+                fromAccountType: vm.transferFormData.fromAccount.accountType.id,
+                fromAccountId: vm.transferFormData.fromAccount.accountId,
+                toOfficeId: vm.transferFormData.toAccount.officeId,
+                toClientId: vm.transferFormData.toAccount.clientId,
+                toAccountType: vm.transferFormData.toAccount.accountType.id,
+                toAccountId: vm.transferFormData.toAccount.accountId,
+                dateFormat: "dd MMMM yyyy",
+                locale: "en",
+                transferDate: vm.transferFormData.transferDate,
+                transferAmount: "" + vm.transferFormData.amount,
+                transferDescription: vm.transferFormData.remark
+            }
+            // Sending
+            AccountTransferService.transfer().save(transferData).$promise.then(function () {
+               $mdDialog.hide("success");
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Completed Successfully')
+                        .position('top right')
+                );
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Error in Completing Transfer: ' + errors)
+                        .position('top right')
+                );
+                $mdDialog.hide("error");
+
+            });
+
+        }
+    }
+})();
+
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('ViewReportsCtrl', ['$scope', '$rootScope', '$state','$location', ViewReportsCtrl]);
+
+    function ViewReportsCtrl($scope, $rootScope, $state, $location) {
+        var vm = this;
+        vm.selected = [];
+        vm.routeTo = routeTo;
+
+        function routeTo(report) {
+            $location.path('/run_report/' + report.reportName + '/' + report.id + '/' + report.reportType);
+        }
+
+        vm.reports = [];
+
+    }
+
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .service('RunReportService', ['$q', '$http', '$rootScope', '$state', '$resource', 'BASE_URL', RunReportService]);
+
+    function RunReportService($q, $http, $rootScope, $state, $resource, BASE_URL) {
+
+        this.reports = function () {
+
+            return $resource(BASE_URL + "/self/runreports/:reportName" + '?R_officeId='+ ':id', {reportName: '@reportName', id: '@id'});
+
+
+        }
+
+    }
+
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('RunReportCtrl', ['$http', '$scope', '$rootScope','$state', '$stateParams', '$resource', '$location', 'dateFilter', 'BASE_URL', '$sce', 'RunReportService', RunReportCtrl]);
+
+    function RunReportCtrl($http, $scope, $rootScope, $state, $stateParams, $resource, $location, dateFilter, BASE_URL, $sce, RunReportService) {
+        var vm = this;
+
+
+        vm.reportName = $stateParams.name;
+        vm.id = $stateParams.id;
+        vm.reportData = {};
+        vm.reportData.columnHeaders = [];
+
+        vm.isDecimal = isDecimal
+
+
+        RunReportService.reports().get({reportName: vm.reportName, id: vm.id}).$promise.then(function(data) {
+            vm.reportData = data;
+            vm.reportData.columnHeaders = data.columnHeaders;
+            console.log(vm.reportData.data[0].row);
+        });
+
+        function isDecimal (index) {
+            if(vm.reportData.columnHeaders && vm.reportData.columnHeaders.length > 0){
+                for(var i=0; i<vm.reportData.columnHeaders.length; i++){
+                    if(vm.reportData.columnHeaders[index].columnType == 'DECIMAL'){
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
+
+    }
+
+})();
+
 (function () {
     'use strict';
 
@@ -427,16 +554,67 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('RegisterCtrl', ['$scope', '$state', '$mdToast', 'AuthService', 'AccountService', RegisterCtrl]);
+        .controller('RegisterCtrl', ['$scope', '$state', '$mdToast', 'AuthService', '$location',  RegisterCtrl]);
 
     /**
      * @module RegisterCtrl
      * @description
      * Handles Registration of self service user
      */
-    function RegisterCtrl($scope, $state, $mdToast, AuthService, AccountService) {
+    function RegisterCtrl($scope, $state, $mdToast, AuthService, $location) {
+        var vm = this;
+        vm.clearForm = clearForm;
+
+        vm.form={
+            "authenticationMode" :"email"
+        };
 
 
+        function clearForm() {
+            $scope.form.$setPristine();
+            $scope.form.$setUntouched();
+            vm.form = {
+                "authenticationMode" :"email"
+            };
+
+        }
+
+        $scope.submit = function() {
+            AuthService.register(vm.form).then(function () {
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Confirmation email is sent')              // The success part is not working as the response
+                        .position('top right')                                  // is not in JSON format
+                );
+                vm.clearForm();
+            }, function (resp) {
+                var errors = '';
+                if(resp.data){
+                    errors = resp.data.errors.map(function (data) {
+                        return data.defaultUserMessage;
+                    });
+                    errors.join(' ');
+                }if(errors!=''){
+                    $mdToast.show(
+                        $mdToast.simple()
+                            .textContent('Error in creating user: ' + errors)
+                            .position('top right')
+                    );
+                }
+                else{
+                    $mdToast.show(
+                        $mdToast.simple()
+                            .textContent('Confirmation email is sent')
+                            .position('top right')
+                    );
+                    $location.path('/verify');
+                    vm.clearForm();
+                }
+
+
+            });
+
+        }
     }
 
 })();
@@ -519,7 +697,7 @@
      * @description
      * Handles Forgot Password
      */
-    function ForgotPwdCtrl($scope, $state, $mdToast, AuthService, AccountService) {
+    function ForgotPwdCtrl() {
 
     }
 
@@ -779,6 +957,73 @@
 
 (function () {
     'use strict';
+
+    angular.module('selfService')
+        .controller('TPTCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
+
+    function TPTCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
+
+        var vm = this;
+        vm.fromAccountOptions = [];
+        vm.toAccountOptions = [];
+        vm.transferFormData = getTransferFormDataObj()
+
+        vm.getTransferTemplate = getTransferTemplate();
+        vm.clearForm = clearForm;
+        vm.submit = submit;
+
+        // FORMAT THE DATE FOR THE DATEPICKER
+        $mdDateLocale.formatDate = function (date) {
+            return $filter('date')(date, "dd-MM-yyyy");
+        };
+
+        function getTransferFormDataObj() {
+            return {
+                transferDate: new Date()
+            };
+        }
+
+        function getTransferTemplate() {
+            AccountTransferService.getTransferTemplate().get({type: "tpt"},function (data) {
+                vm.fromAccountOptions = data.fromAccountOptions;
+                vm.toAccountOptions = data.toAccountOptions;
+            });
+        }
+
+        function clearForm() {
+            vm.transferFormData = getTransferFormDataObj();
+            $scope.transferForm.$setPristine();
+            $scope.transferForm.$setUntouched();
+        }
+
+        function submit(ev) {
+            $mdDialog.show({
+                controller: 'ReviewTransferDialogCtrl',
+                controllerAs: 'vm',
+                templateUrl: 'src/transfers/review-transfer-dialog/review-transfer-dialog.html',
+                parent: angular.element(document.body),
+                targetEvent: ev,
+                locals: {transferFormData: vm.transferFormData},
+                clickOutsideToClose: true
+            }).then(function (result) {
+                if(result === "success"){
+                    clearForm();
+                }
+            }, function () {
+                clearForm();
+                $mdToast.show(
+                    $mdToast.simple()
+                        .textContent('Transfer Cancelled')
+                        .position('top right')
+                );
+            });
+        }
+
+
+    }
+})();
+(function () {
+    'use strict';
     angular.module('selfService')
         .service('AccountTransferService', ['$q', '$http', '$rootScope', '$resource', 'BASE_URL', AccountTransferService]);
 
@@ -896,73 +1141,6 @@
 })();
 (function () {
     'use strict';
-
-    angular.module('selfService')
-        .controller('TPTCtrl', ['$scope', '$rootScope', '$stateParams', '$filter', '$mdDialog', '$mdDateLocale', '$mdToast', 'AccountTransferService', TPTCtrl]);
-
-    function TPTCtrl($scope, $rootScope, $stateParams, $filter, $mdDialog, $mdDateLocale, $mdToast, AccountTransferService) {
-
-        var vm = this;
-        vm.fromAccountOptions = [];
-        vm.toAccountOptions = [];
-        vm.transferFormData = getTransferFormDataObj()
-
-        vm.getTransferTemplate = getTransferTemplate();
-        vm.clearForm = clearForm;
-        vm.submit = submit;
-
-        // FORMAT THE DATE FOR THE DATEPICKER
-        $mdDateLocale.formatDate = function (date) {
-            return $filter('date')(date, "dd-MM-yyyy");
-        };
-
-        function getTransferFormDataObj() {
-            return {
-                transferDate: new Date()
-            };
-        }
-
-        function getTransferTemplate() {
-            AccountTransferService.getTransferTemplate().get({type: "tpt"},function (data) {
-                vm.fromAccountOptions = data.fromAccountOptions;
-                vm.toAccountOptions = data.toAccountOptions;
-            });
-        }
-
-        function clearForm() {
-            vm.transferFormData = getTransferFormDataObj();
-            $scope.transferForm.$setPristine();
-            $scope.transferForm.$setUntouched();
-        }
-
-        function submit(ev) {
-            $mdDialog.show({
-                controller: 'ReviewTransferDialogCtrl',
-                controllerAs: 'vm',
-                templateUrl: 'src/transfers/review-transfer-dialog/review-transfer-dialog.html',
-                parent: angular.element(document.body),
-                targetEvent: ev,
-                locals: {transferFormData: vm.transferFormData},
-                clickOutsideToClose: true
-            }).then(function (result) {
-                if(result === "success"){
-                    clearForm();
-                }
-            }, function () {
-                clearForm();
-                $mdToast.show(
-                    $mdToast.simple()
-                        .textContent('Transfer Cancelled')
-                        .position('top right')
-                );
-            });
-        }
-
-
-    }
-})();
-(function () {
-    'use strict';
     angular.module('selfService')
         .service('TransactionService', ['$q', '$http', '$rootScope', '$resource', 'BASE_URL', TransactionService]);
 
@@ -1007,6 +1185,43 @@
 
         function onPaginate(offset,limit) {
             getTransactions(angular.extend({}, vm.query, {offset: (offset - 1) * limit, limit: limit}));
+        }
+
+    }
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .service('HelpService', ['$q', '$http', '$rootScope', '$state', '$resource', HelpService]);
+
+    function HelpService ($q, $http, $rootScope, $state, $resource) {
+
+        this.getFAQ = function () {
+            return $resource(''); // enter the URL of the FAQ
+        }
+
+
+
+    }
+})();
+(function () {
+    'use strict';
+
+    angular.module('selfService')
+        .controller('HelpCtrl', ['$scope', '$rootScope', '$state', '$stateParams','HelpService', HelpCtrl]);
+
+    function HelpCtrl ($scope, $rootscope, $state, $stateParams, HelpService) {
+        var vm=this;
+
+        vm.faqData=[];
+        vm.getfaq = getfaq;
+
+        function getfaq() {
+            HelpService.getFAQ().get().$promise.then(function (data) {
+                vm.faqData = data;
+
+            })
         }
 
     }
@@ -1133,10 +1348,18 @@
     'use strict';
 
     angular.module('selfService')
-        .controller('DashboardCtrl', ['$filter', 'AccountService', DashboardCtrl]);
+        .controller('DashboardCtrl', ['$filter', 'AccountService', 'LoanAccountService', 'SavingsAccountService', DashboardCtrl]);
 
-    function DashboardCtrl($filter, AccountService) {
+    function DashboardCtrl($filter, AccountService, LoanAccountService, SavingsAccountService) {
         var vm = this;
+        vm.accountTypeOptions = ['Loan', 'Savings', 'Shares'];
+        vm.accountno;
+        vm.accountType='';
+        vm.paymentTypes;
+        vm.showTransactionGraph = false;
+        vm.transactionDatas = [];
+        vm.selectPayment = selectPayment;
+        vm.submit = submit;
         vm.dashboardData = {};
         vm.options = {
             chart: {
@@ -1147,6 +1370,26 @@
                 y: function(d){return d.y;},
                 duration: 500,
                 labelSunbeamLayout: true,
+            }
+        };
+
+        vm.options2 = {
+            chart: {
+                type: 'discreteBarChart',
+                height: 400,
+                x: function(a){return a.label;},
+                y: function(a){return a.value;},
+                showValues: false,
+                showXAxis: false,
+                staggerLabels: true,
+                duration: 200,
+                xAxis: {
+                    axisLabel: 'Date of Transaction'
+                },
+                yAxis: {
+                    axisLabel: 'Money in your currency',
+                    axisLabelDistance: -5
+                }
             }
         };
 
@@ -1200,6 +1443,108 @@
             return chartData;
         }
 
+        function getLoanDetails(id,payType) {
+            LoanAccountService.loanAccount().get({
+                id: id,
+                associations: 'transactions'
+            }).$promise.then(function (res) {
+                vm.loanAccountDetails = res;
+
+                var chartData = [];
+                var values2=[];
+                vm.paymentTypes =[];
+                for(var j in vm.loanAccountDetails.transactions){
+                   vm.paymentTypes.push(vm.loanAccountDetails.transactions[j].type.value);
+                }
+                vm.paymentTypes = remove_duplicates(vm.paymentTypes);
+
+                    for (var i in vm.loanAccountDetails.transactions){
+
+                        if(vm.loanAccountDetails.transactions[i].type.value == payType){
+                            var transactionDate = $filter('date')( new Date(vm.loanAccountDetails.transactions[i].date), 'dd MMMM yyyy');
+                            values2.push({
+                                label: transactionDate,
+                                value: vm.loanAccountDetails.transactions[i].amount
+                            });
+                        }
+                    }
+                    chartData.push({
+                        key: 'transactions',
+                        values: values2
+                    });
+                    vm.transactionDatas=chartData;
+
+            });
+        }
+
+        function getSavingsDetail(id,payType) {
+            SavingsAccountService.savingsAccount().get({id: id, associations: 'transactions'}).$promise.then(function(res) {
+                vm.savingsAccountDetails = res;
+                vm.transactions = res.transactions;
+
+                var chartData = [];
+                var values2=[];
+                vm.paymentTypes =[];
+                for(var j in vm.savingsAccountDetails.transactions){
+                    vm.paymentTypes.push(vm.savingsAccountDetails.transactions[j].transactionType.value);
+                }
+                vm.paymentTypes = remove_duplicates(vm.paymentTypes);
+
+                for (var i in vm.savingsAccountDetails.transactions){
+
+                    if(vm.savingsAccountDetails.transactions[i].transactionType.value == payType){
+                        var transactionDate = $filter('date')( new Date(vm.savingsAccountDetails.transactions[i].date), 'dd MMMM yyyy');
+                        values2.push({
+                            label: transactionDate,
+                            value: vm.savingsAccountDetails.transactions[i].amount
+                        });
+                    }
+                }
+                chartData.push({
+                    key: 'transactions',
+                    values: values2
+                });
+                vm.transactionDatas=chartData;
+
+            });
+        }
+
+
+
+        function remove_duplicates(arr) {
+            var seen = {};
+            var ret_arr = [];
+            for (var i = 0; i < arr.length; i++) {
+                if (!(arr[i] in seen)) {
+                    ret_arr.push(arr[i]);
+                    seen[arr[i]] = true;
+                }
+            }
+            return ret_arr;
+
+        }
+
+        function selectPayment(payType) {
+            if(vm.accountType=='Loan'){
+                getLoanDetails(vm.accountno, payType);
+            }
+            if(vm.accountType=='Savings'){
+                getSavingsDetail(vm.accountno,payType);
+            }
+        }
+
+        function submit(payType) {
+            if(vm.accountType=='Loan'){
+                getLoanDetails(vm.accountno, payType);
+                vm.showTransactionGraph=true;
+            }
+            if(vm.accountType=='Savings'){
+                getSavingsDetail(vm.accountno,payType);
+                vm.showTransactionGraph=true;
+            }
+
+
+        }
 
     }
 })();
@@ -1377,7 +1722,7 @@
         function getClientImage(clientId) {
             AccountService.getClientImage(clientId).then( function (resp) {
                 vm.profileImage = resp.data;
-            }).catch(function(err) {
+            }).catch(function() {
                 // Not Found Profile image
                 vm.profileImage = null;
             });
@@ -1578,7 +1923,7 @@
 
         //Resource for REST APIs
         this.doLogin = function(data) {
-            return $resource(BASE_URL+'/self/authentication', data);
+            return $resource(BASE_URL +'/self/authentication', data);
         }
 
         this.logout = function() {
@@ -1588,6 +1933,14 @@
             setAccessToken('');
             storageService.clear();
             $state.go('login');
+        }
+
+        this.register = function(data) {
+            return $http.post(BASE_URL + '/self/registration',data);
+        }
+
+        this.verifyUser = function(data){
+            return $http.post(BASE_URL + '/self/registration/user',data);
         }
 
     }

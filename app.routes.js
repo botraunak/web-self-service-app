@@ -94,9 +94,9 @@
                     }
                 })
                 .state('app.help', {
-                    url: '/charges',
-                    templateUrl: 'src/common/coming-soon.html',
-                    controller: 'ClientCtrl',
+                    url: '/help',
+                    templateUrl: 'src/help/help.html',
+                    controller: 'HelpCtrl',
                     controllerAs: 'vm',
                     data: {
                         title: 'Help',
@@ -179,6 +179,23 @@
                     controller: 'LoanApplicationCtrl',
                     controllerAs: 'vm'
                 })
+                .state('app.reports',{
+                    url: '/reports',
+                    templateUrl: 'src/reports/view_reports/view_reports.html',
+                    controller: 'ViewReportsCtrl',
+                    controllerAs: 'vm'
+                })
+                .state('app.run_report',{
+                    url: '/run_report/:name/:id/:type',
+                    params : {
+                        name : '',
+                        id: '',
+                        type: ''
+                    },
+                    templateUrl: 'src/reports/run_reports/run_reports.html',
+                    controller: 'RunReportCtrl',
+                    controllerAs: 'vm'
+                })
                 .state('login', {
                     url: '/login',
                     templateUrl: 'src/authentication/login/login.html',
@@ -204,6 +221,15 @@
                     controllerAs: 'vm',
                     data: {
                         title: 'Register User'
+                    }
+                })
+                .state('verify', {
+                    url: '/verify',
+                    templateUrl: 'src/authentication/register/verification/verification.html',
+                    controller: 'VerificationCtrl',
+                    controllerAs: 'vm',
+                    data: {
+                        title: 'Verify User'
                     }
                 })
             }
